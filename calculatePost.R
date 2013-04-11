@@ -323,6 +323,41 @@ remove_redundent_sets <- function(configure)
 
 }
 
+one2set <- function(configure, N)
+{
+	out <- rep(0, N);
+	index1 <- 1;
+	while(index1 <= length(configure)) {
+		out[configure[index1]] = 1;	
+		index1 <- index1 + 1;
+	}
+	return(out);
+}
+
+all_possible_perm <- function(configure)
+{
+	set <- c();
+	index1 <- 1;
+	N <- length(configure);
+
+	while(index1 <= N) {
+		if(configure[index1]==1)
+			set <- cbind(set,index1);
+		index1 <- index1 + 1;
+	}
+	sets <- subsets(set, N);
+	
+	output <- rep(0, 2^sum(configure))
+	index1 <- 1;
+	total_size <- nrow(sets);
+	while(index1 <= total_size) {
+		output[index1] = binary2Int(sets[index1,])+1;
+		index1 <- index1 + 1;
+	}	
+
+	return (output)
+}
+
 find_optimal_merge <- function(potential_casual, Z, R, power, alpha,ro) 
 {
 	sum <- 0;
@@ -349,25 +384,19 @@ find_optimal_merge <- function(potential_casual, Z, R, power, alpha,ro)
 
 	cat('sum=', sum, '\n');
 		
-	tmpvalues <- values;
+#	tmpvalues <- values;
 
 	index1 <- 2;
 	index2 <- 1;
 	while(index1 <= nrow(order_sets)) {
 		configure <- order_sets[index1,];
 		#cat(index1,'\t',configure, '\t');
-		all_configure <- all_possible(configure);
+		all_configure <- all_possible_perm(configure);
 		index2 <- 1;
 		while(index2 <= length(all_configure)) {
-			tmpvalues[binary2Int(configure)+1] <- tmpvalues[binary2Int(configure)+1] + tmpvalues[all_configure[index2]];
+			tmpvalues[binary2Int(configure)+1] <- tmpvalues[binary2Int(configure)+1] + values[all_configure[index2]];
 			index2 <- index2 + 1;
 		}
-		all_remove <- remove_redundent_sets(configure);
-		index2 <- 1;
-                while(index2 <= length(all_remove)) {
-                        tmpvalues[binary2Int(configure)+1] <- tmpvalues[binary2Int(configure)+1] - tmpvalues[all_remove[index2]];
-                        index2 <- index2 + 1;
-                }
 		if(tmpvalues[binary2Int(configure)+1]/sum >= ro) {
 			return(list(orderset=order_sets, index=index1, sets=sets, value=values));
 		}	
@@ -401,8 +430,32 @@ find_optimal_sets <- function(results, ro)
 	}
 	return(minIndex);
 }
+
+
+conditional_like_lihood <- function(Z, R, NCP)
+{
+	MIN_VALUE <- 0;
+	result <- rep(0, length(Z));
+
+	tmpZ <- Z;	
+	index <- 1;	
+	cat(tmpZ, '\n')
+	while(index < length(Z)) {
+		indexSortValue <- order(-abs(tmpZ));
+		result[index] <- indexSortValue[1];
+		tmpZ <- tmpZ - tmpZ[indexSortValue[1]] * R[indexSortValue[1],];
+		cat(tmpZ, '\n');
+		tmpZ[indexSortValue[1]] <- MIN_VALUE;
+		index <- index + 1;
+	}	
+	return(result);
+}
+
+
 # Z is the z-score from the EMMA
-# R calculatePost outoutFILENAME seed_num ro
+# newR is the correlation between different SNPs
+# ro is the cut-off of postier we like to reach 
+
 
 args <- commandArgs(trailingOnly = TRUE);
 
@@ -413,46 +466,51 @@ alpha <- 1e-08;
 ro <- as.double(args[3]);
 #ro <- 0.95;
 
-true_casual <- c(0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0);
-#true_casual <- c(0,0,1,0,0,0,0,0,0,0);
-
 set.seed(as.integer(args[2]))
-#set.seed(88);
+
+#true_casual <- c(0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0);
+#true_casual <- c(0,0,1,0,0,0,0,0,0,0);
+true_casual <- rep(0,row);
+true_casual[sample(1:row,2)] <- 1;	# make this SNP to be first casual
 
 NCP <- calculate_cutoff_power(100, power, alpha) * sqrt(100);
-
 
 number_snps_peak <- sqrt(length(scan("/home/fhormoz/code/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld")));
 
 tmp <- matrix(scan("/home/fhormoz/code/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld"), number_snps_peak, number_snps_peak);
-rand <- sample(number_snps_peak, row);
-newR <- tmp[rand,rand];
+snpIndexs <- (as.integer(number_snps_peak/2)-as.integer(row/2)):(as.integer(number_snps_peak/2)-as.integer(row/2)+row-1);
+
+newR <- tmp[snpIndexs, snpIndexs];
 
 index1 <- 1;
 index2 <- 1;
 
-while(index1 < row) {
+while(index1 <= row) {
 	index2 <- index1;
-	while(index2 < row) {
+	while(index2 <= row) {
 		newR[index2, index1] <- newR[index1, index2];
 		index2 <- index2 + 1;
 	}
+	cat(newR[index1,],'\n');
 	index1 <- index1 + 1;
 }
 
-cat(newR,'\n');
+
 
 casual <- matrix(true_casual,1,row);
 Z <- rmvnorm(1, NCP %*% casual %*% newR, newR);
 
-results <- find_optimal_merge(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20), Z, newR, power, alpha, ro);
-order_set <- results$orderset;
-minIndex <- results$index;
-sets <- results$sets;
-values <- results$value;
+cat('Z=', Z, '\n');
+
+results     <- find_optimal_merge(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20), Z, newR, power, alpha, ro);
+#results     <- find_optimal_merge(c(1,2,3,4,5,6,7,8,9,10), Z, newR, power, alpha, ro);
+order_set   <- results$orderset;
+minIndex    <- results$index;
+sets        <- results$sets;
+values      <- results$value;
 sort_values <- values[order(-values)];
 
-
+cond_sets   <- conditional_like_lihood(Z, newR, NCP)
 
 output1 <- sum(order_set[minIndex,]);	
 output2 <- order_set[minIndex,];
@@ -460,4 +518,6 @@ output3 <- which(sort_values==values[binary2Int(true_casual)+1]);
 
 write(output1, file = toString(args[1]));
 write(output2, file = toString(args[1]), append=TRUE, ncol=row);
+write(true_casual, file = toString(args[1]), append=TRUE, ncol=row);
 write(output3, file = toString(args[1]), append=TRUE);
+write(cond_sets, file = toString(args[1]), append=TRUE, ncol=row);
