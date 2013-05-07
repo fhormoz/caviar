@@ -358,7 +358,7 @@ all_possible_perm <- function(configure)
 	return (output)
 }
 
-find_optimal_merge <- function(potential_casual, Z, R, power, alpha,ro) 
+find_optimal_merge <- function(potential_casual, Z, R, power, alpha,ro, prob_casual) 
 {
 	sum <- 0;
 	index1 <- 1;
@@ -373,31 +373,32 @@ find_optimal_merge <- function(potential_casual, Z, R, power, alpha,ro)
 
 	values <- rep(0, nrow(sets));
 	tmpvalues <- rep(0, nrow(sets));
-	
 
         while(index1 <= nrow(sets))
         {
-                sum <- sum + likehood_est(sets[index1,], Z, R, NCP);
+		num1 <- sum(sets[index1,]);
+		prior <- (prob_casual^num1)*(1-prob_casual)^(N-num1);
+                sum  <- sum + likehood_est(sets[index1,], Z, R, NCP)*prior;
                 values[index1] <-  likehood_est(sets[index1,], Z, R, NCP);
 		index1 <- index1 + 1;
         }
 
 	cat('sum=', sum, '\n');
 		
-#	tmpvalues <- values;
-
 	index1 <- 2;
 	index2 <- 1;
 	while(index1 <= nrow(order_sets)) {
 		configure <- order_sets[index1,];
-		#cat(index1,'\t',configure, '\t');
 		all_configure <- all_possible_perm(configure);
 		index2 <- 1;
 		while(index2 <= length(all_configure)) {
-			tmpvalues[binary2Int(configure)+1] <- tmpvalues[binary2Int(configure)+1] + values[all_configure[index2]];
+			num1  <- sum(sets[all_configure[index2],]);
+			prior <- (prob_casual^num1)*(1-prob_casual)^(N-num1);
+			tmpvalues[binary2Int(configure)+1] <- tmpvalues[binary2Int(configure)+1] + 
+								 values[all_configure[index2]]*prior;
 			index2 <- index2 + 1;
 		}
-		if(tmpvalues[binary2Int(configure)+1]/sum >= ro) {
+		if((tmpvalues[binary2Int(configure)+1])/sum >= ro) {
 			return(list(orderset=order_sets, index=index1, sets=sets, value=values));
 		}	
 		index1 <- index1 + 1;
@@ -439,12 +440,10 @@ conditional_like_lihood <- function(Z, R, NCP)
 
 	tmpZ <- Z;	
 	index <- 1;	
-	cat(tmpZ, '\n')
 	while(index < length(Z)) {
 		indexSortValue <- order(-abs(tmpZ));
 		result[index] <- indexSortValue[1];
-		tmpZ <- tmpZ - tmpZ[indexSortValue[1]] * R[indexSortValue[1],];
-		cat(tmpZ, '\n');
+		tmpZ <- (tmpZ - tmpZ[indexSortValue[1]] * R[indexSortValue[1],])/(1-R[indexSortValue[1],]*R[indexSortValue[1],]);
 		tmpZ[indexSortValue[1]] <- MIN_VALUE;
 		index <- index + 1;
 	}	
@@ -468,10 +467,14 @@ ro <- as.double(args[3]);
 
 set.seed(as.integer(args[2]))
 
+casual_count <- 2;
+
+prob_casual <- 0.02;
+
 #true_casual <- c(0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0);
 #true_casual <- c(0,0,1,0,0,0,0,0,0,0);
 true_casual <- rep(0,row);
-true_casual[sample(1:row,2)] <- 1;	# make this SNP to be first casual
+true_casual[sample(1:row,casual_count)] <- 1;	# make this SNP to be first casual
 
 NCP <- calculate_cutoff_power(100, power, alpha) * sqrt(100);
 
@@ -502,7 +505,7 @@ Z <- rmvnorm(1, NCP %*% casual %*% newR, newR);
 
 cat('Z=', Z, '\n');
 
-results     <- find_optimal_merge(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20), Z, newR, power, alpha, ro);
+results     <- find_optimal_merge(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20), Z, newR, power, alpha, ro, prob_casual);
 #results     <- find_optimal_merge(c(1,2,3,4,5,6,7,8,9,10), Z, newR, power, alpha, ro);
 order_set   <- results$orderset;
 minIndex    <- results$index;
@@ -521,3 +524,4 @@ write(output2, file = toString(args[1]), append=TRUE, ncol=row);
 write(true_casual, file = toString(args[1]), append=TRUE, ncol=row);
 write(output3, file = toString(args[1]), append=TRUE);
 write(cond_sets, file = toString(args[1]), append=TRUE, ncol=row);
+write(Z, file = toString(args[1]), append=TRUE, ncol=row);
