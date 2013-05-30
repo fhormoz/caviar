@@ -5,7 +5,7 @@ import random
 import csv
 import sys
 from math import factorial
-
+from ctypes import *
 
 def _getAplus(A):
     eigval, eigvec = npy.linalg.eig(A)
@@ -291,38 +291,41 @@ def all_possible_perm(configure) :
 
 
 def find_optimal_merge_memory(potential_casual, Z, R, Rinv, Rdet, power, alpha,ro, prob_casual) :
-       
-	step = 0; 
-	total_sum = 0;
+      	index = 0;
+	num1 = 0; 
+	total_sum = 0.0;
         total_casual_cut = 5;
         N = len(potential_casual);
         NCP = calculate_cutoff_power(100, power, alpha) * sqrt(100);
 
-	max_value_likelihood = 0;
-	max_value_likelihood_config = npy.matrix(npy.zeros(shape = (1, N), dtype=npy.int8));
-
         print 'NCP=', NCP;
 
-	curr_binary_value = npy.matrix(npy.zeros(shape = (1, N), dtype=npy.int8));
-        while(curr_binary_value.sum() <= total_casual_cut) :
-                num1 = curr_binary_value.sum();
-                prior = prior_cal(prob_casual, N, num1, total_casual_cut);
-		tmp_likelihood = likelihood_est(curr_binary_value, Z, R, Rinv, Rdet, NCP);
-		total_sum  = total_sum + tmp_likelihood*prior;
-                if(tmp_likelihood > max_value_likelihood) :
-			max_value_likelihood = tmp_likelihood;
-			max_value_likelihood_config = curr_binary_value.copy();
-		#print curr_binary_value, '\t', likelihood_est(curr_binary_value, Z, R, NCP), '\t' ,prior;
-                #print step;
-		step = step + 1;
-		curr_binary_value = next_binary_value2(curr_binary_value).copy();
+	_binary = CDLL('/home/fhormoz/code/Posterior/libbin.so')
+	data = '0' * N;
 
-        print 'sum=', total_sum;
-	print 'max=', max_value_likelihood;
-	print 'max_conf=', max_value_likelihood_config; 
+        #c_data = c_char_p(data);
+        c_size = c_int(N);	
+	c_NCP  = c_double(NCP);
+	c_Z = Z.ctypes.data_as(c_void_p);
+	c_configure = c_char_p(data);
+	vector_R =  npy.reshape(R, N*N);
+	c_total_sum = c_double(0.0);
+	
+	print vector_R;
+	
+	c_R = vector_R.ctypes.data_as(c_void_p);
 
-        index2 = 0;
-	curr_binary_value = npy.matrix(npy.zeros(shape = (1, N)));
+	print c_Z;
+	print c_NCP.value;	
+
+	c_total_sum = _binary.findOptimalSet(c_Z, c_R,  c_size, c_NCP, c_configure);
+
+	curr_binary_value = npy.matrix(list(c_configure.value)[0:N], dtype=npy.uint8);
+
+	print c_configure.value;
+	print curr_binary_value;
+	print c_total_sum;
+
 	#while(curr_binary_value.sum() <= total_casual_cut) :
         #        all_configure = all_possible_perm_cutoff(curr_binary_value, total_casual_cut);
         #        [row, col] = all_configure.shape;
@@ -338,28 +341,28 @@ def find_optimal_merge_memory(potential_casual, Z, R, Rinv, Rdet, power, alpha,r
         #        curr_binary_value = next_binary_value2(curr_binary_value);
 	print "WE USE HURISTIC FOR HERE"
 	#return(max_value_likelihood_config);
-	index1 = 0;
-	index2 = 0;
-	Z2list = Z.tolist()[0];	# we convert the Z matrix to list to use
-       	index_Z_sorted = sorted(range(N), key=lambda k: abs(Z2list[k]), reverse=True); 
-	print index_Z_sorted;
-	curr_binary_value = npy.matrix(npy.zeros(shape = (1, N)));
-	tmpvalue = 0;
-	while(tmpvalue / total_sum < ro and curr_binary_value.sum() <= N*0.3) :
-		tmpvalue = 0;
-		curr_binary_value[0, index_Z_sorted[index1]]  = 1;
-		all_configure = all_possible_perm_cutoff(curr_binary_value, total_casual_cut);
-                [row, col] = all_configure.shape;
-                index2 = 0;
-                while(index2 < row) :
-                        num1  = all_configure[index2,:].sum();
-                        prior = prior_cal(prob_casual, N, num1, total_casual_cut);
-                        tmpvalue = tmpvalue + likelihood_est(all_configure[index2,:], Z, R, Rinv, Rdet, NCP) * prior;
-                        if(tmpvalue/total_sum >= ro) :
-				return curr_binary_value;
-			#print "step2=", all_configure[index2,:],'\t',tmpvalue, '\t', likelihood_est(all_configure[index2,:], Z, R, NCP) , '\t', prior;
-                        index2 = index2 + 1;	
-		index1 = index1 + 1;			
+	#index1 = 0;
+	#index2 = 0;
+	#Z2list = Z.tolist()[0];	# we convert the Z matrix to list to use
+       	#index_Z_sorted = sorted(range(N), key=lambda k: abs(Z2list[k]), reverse=True); 
+	#print index_Z_sorted;
+	#curr_binary_value = npy.matrix(npy.zeros(shape = (1, N)));
+	#tmpvalue = 0;
+	#while(tmpvalue / total_sum < ro and curr_binary_value.sum() <= N*0.3) :
+	#	tmpvalue = 0;
+#		curr_binary_value[0, index_Z_sorted[index1]]  = 1;
+#		all_configure = all_possible_perm_cutoff(curr_binary_value, total_casual_cut);
+#                [row, col] = all_configure.shape;
+#                index2 = 0;
+#                while(index2 < row) :
+#                        num1  = all_configure[index2,:].sum();
+#                        prior = prior_cal(prob_casual, N, num1, total_casual_cut);
+#                        tmpvalue = tmpvalue + likelihood_est(all_configure[index2,:], Z, R, Rinv, Rdet, NCP) * prior;
+#                        if(tmpvalue/total_sum >= ro) :
+#				return curr_binary_value;
+#			#print "step2=", all_configure[index2,:],'\t',tmpvalue, '\t', likelihood_est(all_configure[index2,:], Z, R, NCP) , '\t', prior;
+#                        index2 = index2 + 1;	
+#		index1 = index1 + 1;			
 	return(curr_binary_value);
 
 
@@ -388,7 +391,7 @@ def main(argv):
 	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld', 'rb');
 	for data in inputFile:
 		total_snp = total_snp + 1;
-	R = npy.matrix(npy.zeros(shape = (2*total_snp, 2*total_snp)));	
+	R = npy.matrix(npy.zeros(shape = (total_snp, total_snp)));	
 	inputFile.close();	
 
 	row = 0;
@@ -402,8 +405,8 @@ def main(argv):
 			if(col < total_snp):
 				R[row, col] = l;
 			col = col + 1;
-		#row = row + 1;
-		col = total_snp;
+		row = row + 1;
+		"""col = total_snp;
 		for l in line:
 			if(col < 2 * total_snp) :
 				R[row, col] = abs(float(l))/2;
@@ -425,7 +428,7 @@ def main(argv):
                                 R[row, col] = l;
                         col = col + 1;
                 row = row + 1;
-	
+	"""
 	[row,col] = R.shape;
 	print row;
 	print col;
@@ -442,6 +445,8 @@ def main(argv):
                 true_casual[x] = 1;
 
 	Z = npy.random.multivariate_normal((NCP * npy.matrix(true_casual) * R).tolist()[0], R);	
+
+	print true_casual;
 
 	pred_casual = find_optimal_merge_memory(range(row), npy.matrix(Z), R, Rinv, Rdet, power, alpha, ro, prob_casual).tolist()[0];
 
