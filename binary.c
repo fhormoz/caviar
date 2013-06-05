@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
+
+#define SMALL 0.05
 
 long int fact(int n);
+double likelihoodAllPossibleSet(double * d_configure, double * stat, double * sigma, int size, double NCP, int cut_off );
+
 
 long int nCr(int n, int r) {
         long int result = 1;
@@ -126,6 +131,7 @@ int nextBinary(double * data, int size) {
 		}
 	}
 	i = 0;
+	total_one = 0;
 	for(i = 0; i < size; i++)
 		if(data[i] == 1)
 			total_one = total_one + 1;
@@ -196,12 +202,12 @@ double totalLikelihood(double * stat, double * sigma, int size, double NCP) {
 	i = 0;
 
 	while(i < total_iteration) {
-		nextBinary(configure, size);
+		int num = nextBinary(configure, size);
 		tmp_likelihood = likelihood(configure, stat, sigma, size, NCP );
-		printVector(configure, size);
-		printf("\t");
-		printf("%lf\n", tmp_likelihood);
-		sumLikelihood += tmp_likelihood;
+		//printVector(configure, size);
+		//printf("\t");
+		//printf("%lf\t%lf\tSMALL=%lf\n", tmp_likelihood, pow(SMALL, num)*pow(1-SMALL, size-num), SMALL);
+		sumLikelihood += tmp_likelihood*(pow(SMALL, num))*(pow(1-SMALL, size-num));
 		i++;
 	}
 	
@@ -209,7 +215,39 @@ double totalLikelihood(double * stat, double * sigma, int size, double NCP) {
 	return(sumLikelihood);
 }
 
-double likelihood_all_possible_set(double * d_configure, double * stat, double * sigma, int size, double NCP, int cut_off ) {
+double  addNewSNP(double * configure, double * stat, double * sigma, int size, double NCP, int cut_off) {
+
+	int i = 0;
+
+	double max_likelihood = 0;
+	double tmp_likelihood = 0;
+
+	double * max_configure = (double *) malloc (size * sizeof(double *));
+	double * tmp_configure = (double *) malloc (size * sizeof(double *));
+	
+	memcpy(tmp_configure, configure, size * sizeof(double));
+	
+	for(i = 0; i < size; i++) {
+		if(configure[i] == 0) {
+			tmp_configure[i] = 1;
+			tmp_likelihood = likelihoodAllPossibleSet(tmp_configure, stat, sigma, size, NCP, cut_off);
+			if(max_likelihood < tmp_likelihood) {
+				max_likelihood=tmp_likelihood;
+				memcpy(max_configure, tmp_configure, size * sizeof(double));	
+			}
+		}
+		memcpy(tmp_configure, configure, size * sizeof(double));	
+	}
+	
+	memcpy(configure, max_configure, size * sizeof(double));
+
+	free(max_configure);
+	free(tmp_configure);
+
+	return (max_likelihood);
+}
+
+double likelihoodAllPossibleSet(double * d_configure, double * stat, double * sigma, int size, double NCP, int cut_off ) {
 	int i = 0;
 	int j = 0;
 	int index = 0;
@@ -239,7 +277,11 @@ double likelihood_all_possible_set(double * d_configure, double * stat, double *
 	}
 	
 	index = 0;
-	total_iteration = pow(2, num_one);
+	if(num_one <= cut_off)
+		total_iteration = pow(2, num_one);
+	else
+		total_iteration = nCr(num_one,0) +  nCr(num_one,1) +  nCr(num_one,2) +  nCr(num_one,3) +  nCr(num_one,4) +  nCr(num_one,5);
+	int num = 0;
 	while(index < total_iteration) {
 		for(j = 0; j < size; j++) {
 			tmp_configure[j] = 0;
@@ -248,8 +290,8 @@ double likelihood_all_possible_set(double * d_configure, double * stat, double *
 			if(tmp_set[j] == 1)
 				tmp_configure[(int)tmp_index[j]] = 1;
 		}
-		tmp_likelihood += likelihood(tmp_configure, stat, sigma, size, NCP);	
-		nextBinary(tmp_set, num_one);
+		tmp_likelihood += likelihood(tmp_configure, stat, sigma, size, NCP) * pow(SMALL, num) * pow(1-SMALL, size-num);	
+		num = nextBinary(tmp_set, num_one);
 		index++;
 	}
 	free(tmp_configure);
@@ -263,27 +305,36 @@ double findOptimalSet(double * stat, double * sigma, int size, double NCP, char 
 	int i = 0;
 	int j = 0;
 	int cut_off = 5;
+
 	double tmp_likelihood = 0;
 	double sumLikelihood = 0;
+	double maxLikelihood = 0;
+
 	double total_likelihood = totalLikelihood(stat, sigma, size, NCP);
 
-	printf("Total + %lf\n", total_likelihood);
+	printf("Total = %lf\n", total_likelihood);
 
 	long int total_iteration = nCr(size,0) +  nCr(size,1) +  nCr(size,2) +  nCr(size,3) +  nCr(size,4) +  nCr(size,5);
 
 	double * d_configure = (double *) malloc(size * sizeof(double *));
+	double * d_max_configure = (double *) malloc (size * sizeof(double *));
 
         for(i = 0; i < size; i++) {
-                d_configure[i] = 0;
 		configure[i] = '0';
+                d_configure[i] = 0;
+		d_max_configure[i] = 0;
         }
 	
 	i = 0;
-	printf("START");
         while(i < total_iteration) {
                 nextBinary(d_configure, size);
-		tmp_likelihood = likelihood_all_possible_set(d_configure, stat, sigma, size, NCP, cut_off );
+		tmp_likelihood = likelihoodAllPossibleSet(d_configure, stat, sigma, size, NCP, cut_off );
 		//printf("%d %d %lf %lf\n", i, total_iteration, sumLikelihood, total_likelihood);
+		if(tmp_likelihood > maxLikelihood ) {
+			maxLikelihood = tmp_likelihood;
+			memcpy(d_max_configure, d_configure, size * sizeof(double));	
+		}
+
 		if(tmp_likelihood / total_likelihood >= 0.95) {
 			for(j = 0; j < size; j++)
 				if(d_configure[j] == 1) {
@@ -294,14 +345,24 @@ double findOptimalSet(double * stat, double * sigma, int size, double NCP, char 
 		}
                 i++;
         }
-	printf("WE are FUCKED\n");
+	printf("WE are NEED GREEDY\n");
 	
-	for(i = 0; i < size;i++) {
-		if(abs(stat[i]) >= NCP) 
+	do {
+		tmp_likelihood = addNewSNP(d_max_configure, stat, sigma, size, NCP, cut_off);
+		printVector(d_max_configure, size);
+		printf("\n");
+	} while(tmp_likelihood/total_likelihood < 0.95);
+
+	for(i = 0; i < size; i++) {
+		if(d_max_configure[i] == 1) {
 			configure[i] = '1';
+		}
 	}
-	
+
 	free(d_configure);
+	free(d_max_configure);
+
+	return(tmp_likelihood);	
 
 }
 
