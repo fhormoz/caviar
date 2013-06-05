@@ -80,7 +80,7 @@ def pvalues(stat_value) :
 
 def dmvnorm(Z, mu, R, Rinv, Rdet) :
 	[row, col] = Z.shape;
-	return( ( 1 / npy.sqrt(pow(2*pi, col) * abs(Rdet)) )   * exp ( -0.5 * (Z-mu) *  Rdet * (Z-mu).T  ) )
+	return( ( 1 / npy.sqrt(pow(2*pi, col) * abs(Rdet)) )   * exp ( -0.5 * (Z-mu) *  Rinv * (Z-mu).T  ) )
 
 def likelihood_est(configure, Z, R, Rinv, Rdet, NCP) :
 	#mu is the mean for the Multivariance Normal
@@ -375,8 +375,8 @@ def main(argv):
 	ro  = 0.95;
 	power = 0.5;
 	alpha = 1e-08;
-	prob_casual = 0.00001;	
-	casual_implant = 2;
+	prob_casual = 4/35;	
+	casual_implant = 4;
 	total_snp = 0;	
 
 	NCP = calculate_cutoff_power(100, power, alpha) * sqrt(100);
@@ -387,8 +387,8 @@ def main(argv):
 	#R1 = (oldR + oldR.T)/2;
 	#R = (R1 * R1.T);
 	#R = nearPD(R, 10);
-
-	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld', 'rb');
+	
+	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_200SNP/COM_09_affymetrix_18.ld', 'rb');
 	for data in inputFile:
 		total_snp = total_snp + 1;
 	R = npy.matrix(npy.zeros(shape = (total_snp, total_snp)));	
@@ -397,9 +397,9 @@ def main(argv):
 	row = 0;
 	col = 0;
 
-	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld', 'rb');
+	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_200SNP/COM_09_affymetrix_18.ld', 'rb');
 	for data in inputFile:
-        	line = data.split(' ');
+        	line = data.split('\t');
 		col = 0;
 		for l in line:
 			if(col < total_snp):
@@ -414,7 +414,7 @@ def main(argv):
 		row = row + 1; 		
 	inputFile.close();
 
-	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld', 'rb');
+	inputFile = open('/u/home/eeskin/fhormoz/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld', 'rb');
         for data in inputFile:
                 line = data.split(' ');
                 col = 0;
@@ -427,23 +427,29 @@ def main(argv):
                         if(col < 2 * total_snp) :
                                 R[row, col] = l;
                         col = col + 1;
-                row = row + 1;
-	"""
+                row = row + 1; 
+		"""
+
+	R = R[1:100,1:100];
+
 	[row,col] = R.shape;
 	print row;
 	print col;
 	for command in argv:
 		print command;
 
-	Rinv = npy.linalg.inv(R);
-	Rdet = npy.linalg.det(R);
+	#Rinv = npy.linalg.inv(R);
+	#Rdet = npy.linalg.det(R);
+
+	Rinv = R;
+	Rdet = npy.linalg.det(R);	
 
 	# Generate the casual SNP
         casual_snp = random.sample(xrange(row), casual_implant);
         true_casual = [0] * row;
-        for x in casual_snp:
+	for x in casual_snp:
                 true_casual[x] = 1;
-
+	
 	Z = npy.random.multivariate_normal((NCP * npy.matrix(true_casual) * R).tolist()[0], R);	
 
 	print true_casual;
