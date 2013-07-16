@@ -301,6 +301,42 @@ double likelihoodAllPossibleSet(double * d_configure, double * stat, double * si
 	return(tmp_likelihood);
 }
 
+double findOptimalSetGreedy(double * stat, double * sigma, int size, double NCP, char * configure) {
+        int i = 0;
+        int cut_off = 5;
+
+        double tmp_likelihood = 0;
+        double total_likelihood = totalLikelihood(stat, sigma, size, NCP);
+
+        printf("Total = %lf\n", total_likelihood);
+
+        double * d_configure = (double *) malloc(size * sizeof(double *));
+
+        for(i = 0; i < size; i++) {
+                configure[i] = '0';
+                d_configure[i] = 0;
+        }
+        printf("WE NEED GREEDY\n");
+
+        do {
+                tmp_likelihood = addNewSNP(d_configure, stat, sigma, size, NCP, cut_off);
+                printVector(d_configure, size);
+                printf("\n");
+        } while(tmp_likelihood/total_likelihood < 0.95);
+
+        for(i = 0; i < size; i++) {
+                if(d_configure[i] == 1) {
+                        configure[i] = '1';
+                }
+        }
+        free(d_configure);
+        return(tmp_likelihood);
+}
+
+
+
+
+
 double findOptimalSet(double * stat, double * sigma, int size, double NCP, char * configure) {
 	int i = 0;
 	int j = 0;

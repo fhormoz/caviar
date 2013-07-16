@@ -42,6 +42,15 @@ def write2File(outputFile, list) :
 		outputFile.write(' ');
 
 
+def p_value(stat) :
+	return(2 * st.norm.pdf(-abs(stat), loc=0, scale=1));
+
+def convertZ2Pvalue(Z) :
+	result=list();
+	for data in Z:
+		result.append(p_value(data));
+	return(result);
+
 #calculate the power for give lambda and N (number of individual), lambda* sqrt(N) is the NCP
 #power ~ Norm (lambda* sqrt(N), 1)
 # x the value for which we compute the power
@@ -296,7 +305,7 @@ def find_optimal_merge_memory(potential_casual, Z, R, Rinv, Rdet, power, alpha,r
 	total_sum = 0.0;
         total_casual_cut = 5;
         N = len(potential_casual);
-        NCP = calculate_cutoff_power(100, power, alpha) * sqrt(100);
+        NCP = -calculate_cutoff_power(100, power, alpha) * sqrt(100);
 
         print 'NCP=', NCP;
 
@@ -318,7 +327,7 @@ def find_optimal_merge_memory(potential_casual, Z, R, Rinv, Rdet, power, alpha,r
 	print c_Z;
 	print c_NCP.value;	
 
-	c_total_sum = _binary.findOptimalSet(c_Z, c_R,  c_size, c_NCP, c_configure);
+	c_total_sum = _binary.findOptimalSetGreedy(c_Z, c_R,  c_size, c_NCP, c_configure);
 
 	curr_binary_value = npy.matrix(list(c_configure.value)[0:N], dtype=npy.uint8);
 
@@ -375,8 +384,8 @@ def main(argv):
 	ro  = 0.95;
 	power = 0.5;
 	alpha = 1e-08;
-	prob_casual = 4/35;	
-	casual_implant = 4;
+	prob_casual = 2/35;	
+	casual_implant = 1;
 	total_snp = 0;	
 
 	NCP = calculate_cutoff_power(100, power, alpha) * sqrt(100);
@@ -388,7 +397,7 @@ def main(argv):
 	#R = (R1 * R1.T);
 	#R = nearPD(R, 10);
 	
-	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_200SNP/COM_09_affymetrix_18.ld', 'rb');
+	inputFile = open('/home/fhormoz/code/Posterior/data/EUN_MIN_MAX/min.ld', 'rb');
 	for data in inputFile:
 		total_snp = total_snp + 1;
 	R = npy.matrix(npy.zeros(shape = (total_snp, total_snp)));	
@@ -396,41 +405,18 @@ def main(argv):
 
 	row = 0;
 	col = 0;
+	
+	print total_snp;
 
-	inputFile = open('/home/fhormoz/code/Posterior/data/peakSNP_200SNP/COM_09_affymetrix_18.ld', 'rb');
+	inputFile = open('/home/fhormoz/code/Posterior/data/EUN_MIN_MAX/min.ld', 'rb');
 	for data in inputFile:
-        	line = data.split('\t');
+        	line = data.split(' ');
 		col = 0;
 		for l in line:
 			if(col < total_snp):
-				R[row, col] = l;
+				R[row, col] = float(l) ;
 			col = col + 1;
 		row = row + 1;
-		"""col = total_snp;
-		for l in line:
-			if(col < 2 * total_snp) :
-				R[row, col] = abs(float(l))/2;
-			col = col + 1;
-		row = row + 1; 		
-	inputFile.close();
-
-	inputFile = open('/u/home/eeskin/fhormoz/Posterior/data/peakSNP_100kb/peakSNP_100kb.ld', 'rb');
-        for data in inputFile:
-                line = data.split(' ');
-                col = 0;
-                for l in line:
-                        if(col < total_snp):
-                                R[row, col] = abs(float(l))/2;
-                        col = col + 1;
-		col = total_snp;
-                for l in line:
-                        if(col < 2 * total_snp) :
-                                R[row, col] = l;
-                        col = col + 1;
-                row = row + 1; 
-		"""
-
-	R = R[1:100,1:100];
 
 	[row,col] = R.shape;
 	print row;
@@ -444,9 +430,11 @@ def main(argv):
 	Rinv = R;
 	Rdet = npy.linalg.det(R);	
 
+	#TODO
 	# Generate the casual SNP
         casual_snp = random.sample(xrange(row), casual_implant);
-        true_casual = [0] * row;
+	#casual_snp = [24,28]
+	true_casual = [0] * row;
 	for x in casual_snp:
                 true_casual[x] = 1;
 	
@@ -488,6 +476,8 @@ def main(argv):
 	outputFile.write("1 2 3 4 5 6\n");	
 	#write the Z score
 	write2File(outputFile, Z);
+	outputFile.write("\n");
+	write2File(outputFile, convertZ2Pvalue(Z));
 	outputFile.write("\n");
 	#write if we have enough power 0 not enough power 1 enogh power
 	#outputFile.write('0' if len(Z>=NCP)==0 else '1');	
