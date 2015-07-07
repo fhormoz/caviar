@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include <set>
 #include <iostream>
 #include <gsl/gsl_linalg.h>
@@ -28,7 +29,6 @@ string PostCal::convertConfig2String(int * config, int size) {
 double PostCal::likelihood(int * configure, double * stat, double NCP) {
 	int coutOne = 0;
 	int gsl_tmp = 0;
-	double val = 0;
         double matDet = 0;
 	double res    = 0;
 
@@ -160,7 +160,7 @@ double PostCal::totalLikelihood(double * stat, double NCP) {
                         postValues[j] = postValues[j] + tmp_likelihood *configure[j];
 		histValues[num] = histValues[num] + tmp_likelihood;
                 num = nextBinary(configure, snpCount);
-       		if(i % 10000 == 0)
+       		if(i % 1000 == 0)
 			cout << i << endl;
 	}
 	for(int i = 0; i <= maxCausalSNP; i++)
@@ -190,7 +190,7 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure
         std::vector<data> items;
         std::set<int>::iterator it;
         for(int i = 0; i < snpCount; i++) {
-             printf("%d==>%e ",i, postValues[i]/total_likelihood);
+             //printf("%d==>%e ",i, postValues[i]/total_likelihood);
              items.push_back(data(postValues[i]/total_likelihood, i, 0));
         }
         printf("\n");
@@ -208,5 +208,5 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure
         } while( rho < inputRho);
 
         printf("\n");
-
+	return(0);
 }

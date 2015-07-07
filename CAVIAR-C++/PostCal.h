@@ -27,7 +27,7 @@ private:
 	gsl_matrix * sigmaMatrix;
 	gsl_matrix * invSigmaMatrix;
 	gsl_matrix ** matrixPossibleCases; 	//Compute the set of matrixes which repearsent the \sigma \sigma_c \sigma
-	int baseValue;				//base value used for calculation for overflow	
+	double baseValue;			//base value used for calculation for overflow	
 public:
 
 	PostCal(double * sigma, int snpCount, int maxCausalSNP) {

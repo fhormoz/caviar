@@ -125,7 +125,6 @@ void importDataSecondColumn(string fileName, double * vector) {
 		istringstream iss(line);
 		iss >> dataS;
 		iss >> data;
-        	cout << data << endl;
 	        vector[index] = (double)data;
                 index++;
         }
@@ -141,7 +140,6 @@ void importDataFirstColumn(string fileName, string * list) {
         while( getline(fin, line) ){
 		istringstream iss(line);
                 iss >> data;
-		cout << data << endl;
                 list[index] = data;
 		index++;
         }
@@ -279,7 +277,7 @@ void matrixMul(int * aData, int * bData, int * cData, int row1, int col1, int ro
 		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, aMatrix, bMatrix, 0.0, cMatrix);
 		for(int i = 0; i < row1; i++)
 			for(int j = 0; j < col2; j++) 
-				cData[i * col2 + j] =  gsl_matrix_get(cMatrix, i, j);
+				cData[i * col2 + j] =  (int)gsl_matrix_get(cMatrix, i, j);
 	}	
 	gsl_matrix_free(aMatrix);
 	gsl_matrix_free(bMatrix);
@@ -291,6 +289,7 @@ int snp2Gene(int * G, int snpId, int snpCount, int geneCount) {
 		if(G[snpId*geneCount + i] == 1)
 			return i;
 	}
+	return -1;
 }
 
 void setIdentitymatrix(int * G, int snpCount, int geneCount) {

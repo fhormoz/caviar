@@ -13,7 +13,7 @@ using namespace std;
 
 int main( int argc, char *argv[]  ){
 	int tmpSize = 0;
-	int totalCausalSNP = 0;
+	int totalCausalSNP = 2;
 	int snpCount  = 0;
 	double NCP = 5.7;
 	double rho = 0;
@@ -41,6 +41,8 @@ int main( int argc, char *argv[]  ){
   				cout << "-l LDFILE, --ld_file=LDFILE  	the ld input file" << endl;
   				cout << "-z ZFILE, --z_file=ZFILE	the z-score and rsID files" << endl;
   				cout << "-r RHO, --rho-prob=RHO		set $pho$ probability " << endl;
+				cout << "-c causal			set the maximum number of causal SNPs" << endl;
+				cout << "-f 1				to out the probaility of different number of causal SNP" << endl;
 				exit(0);
 			case 'l':
 				ldFile = string(optarg);
@@ -97,16 +99,8 @@ int main( int argc, char *argv[]  ){
 	importDataFirstColumn(zFile, snpNames);
 	importDataSecondColumn(zFile, stat);
 
-	printVector(sigma, snpCount*snpCount);	
-	PostCal post(sigma, snpCount, 6);
+	PostCal post(sigma, snpCount, totalCausalSNP);
 	post.findOptimalSetGreedy(stat, NCP, configure, rank, rho);
-
-	/*printVector(stat, snpCount);
-	printf("\n");
-	printVector(configure, snpCount);
-	printf("\n");
-	printVector(rank, snpCount);
-	printf("\n");*/	
 
 	ofstream outputFile;
 	string outFileNameSet = string(outputFileName)+"_set";
