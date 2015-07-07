@@ -19,7 +19,6 @@ int main( int argc, char *argv[]  ){
 	double rho = 0;
 	double * sigma;
 	double * stat;
-	double * mean;
 	char * configure;
 	int * rank;
 	bool histFlag = false;
@@ -87,7 +86,6 @@ int main( int argc, char *argv[]  ){
         stat      = new double[snpCount];
         configure = new char[snpCount];
         rank      = new int[snpCount];
-	mean      = new double [snpCount];
 	snpNames  = new string [snpCount];
 
 	importData(ldFile, sigma);		
