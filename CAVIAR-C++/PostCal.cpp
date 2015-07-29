@@ -154,8 +154,6 @@ double PostCal::totalLikelihood(double * stat, double NCP) {
 	for(long int i = 0; i < total_iteration; i++) {
                 tmp_likelihood = likelihood(configure, stat, NCP) * (pow(SMALL, num))*(pow(1-SMALL, snpCount-num));
                 sumLikelihood += tmp_likelihood;
-		//printVector(configure, snpCount);
-		//printf("\t%e\n", tmp_likelihood);
 		for(int j = 0; j < snpCount; j++)
                         postValues[j] = postValues[j] + tmp_likelihood *configure[j];
 		histValues[num] = histValues[num] + tmp_likelihood;
@@ -181,8 +179,7 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure
 
         totalLikelihood(stat, NCP);
 
-        printf("\nRho = %lf\n", inputRho);
-        printf("Total = %e\n", total_likelihood);
+        printf("Total Likelihood= %e\n", total_likelihood);
 
 	for(int i = 0; i < snpCount; i++)
 		total_likelihood += postValues[i];

@@ -93,10 +93,11 @@ void importData(string fileName, double * vector) {
 	int index = 0;
 	double data = 0;
         ifstream fin(fileName.c_str(), std::ifstream::in);
-        while( fin.good()  ){
-                fin >> data;
+        fin >> data;
+        while (fin.good()) {
                 vector[index] = data;
-		index++;
+                index++;
+                fin >> data;
         }
         fin.close();
 }
