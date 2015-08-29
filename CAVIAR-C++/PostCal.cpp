@@ -60,8 +60,11 @@ double PostCal::likelihood(int * configure, double * stat, double NCP) {
 	gsl_permutation *p = gsl_permutation_alloc(snpCount);
         gsl_linalg_LU_decomp(tmpResultMatrix2, p, &gsl_tmp );
         matDet = gsl_linalg_LU_det(tmpResultMatrix2,gsl_tmp);
-	gsl_linalg_cholesky_decomp(tmpResultMatrix1);
-        gsl_linalg_cholesky_invert(tmpResultMatrix1);	
+
+	//gsl_linalg_cholesky_decomp(tmpResultMatrix1);
+        //gsl_linalg_cholesky_invert(tmpResultMatrix1);	
+        gsl_linalg_LU_invert(tmpResultMatrix2, p, tmpResultMatrix1);
+
 	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, statMatrixtTran, tmpResultMatrix1, 0.0, tmpResultMatrix1N);
         gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, tmpResultMatrix1N, statMatrix, 0.0, tmpResultMatrix11);	
 
@@ -80,8 +83,22 @@ double PostCal::likelihood(int * configure, double * stat, double NCP) {
 	if(baseValue == 0)
 		baseValue = res;
 	res = res - baseValue;
-	
-	return( exp(-res/2)/sqrt(matDet) );	
+
+	if(matDet==0) {
+		cout << "Error the matrix is singular and we fail to fix it." << endl;
+		exit(0);
+	}
+	/*
+		We compute the log of -res/2-log(det) to see if it is too big or not. 
+		In the case it is too big we just make it a MAX value.
+	*/
+	double tmplogDet = log(sqrt(abs(matDet)));
+	double tmpFinalRes = -res/2 - tmplogDet;
+
+	if(tmpFinalRes > 700) {
+		return(exp(700));
+	}
+	return( exp(-res/2)/sqrt(abs(matDet)) );	
 }
 
 int PostCal::nextBinary(int * data, int size) {
@@ -154,12 +171,13 @@ double PostCal::totalLikelihood(double * stat, double NCP) {
 	for(long int i = 0; i < total_iteration; i++) {
                 tmp_likelihood = likelihood(configure, stat, NCP) * (pow(SMALL, num))*(pow(1-SMALL, snpCount-num));
                 sumLikelihood += tmp_likelihood;
-		for(int j = 0; j < snpCount; j++)
-                        postValues[j] = postValues[j] + tmp_likelihood *configure[j];
+		for(int j = 0; j < snpCount; j++) {
+                        postValues[j] = postValues[j] + tmp_likelihood * configure[j];
+		}
 		histValues[num] = histValues[num] + tmp_likelihood;
                 num = nextBinary(configure, snpCount);
        		if(i % 1000 == 0)
-			cout << i << endl;
+			cout << i << " "  << sumLikelihood << endl;
 	}
 	for(int i = 0; i <= maxCausalSNP; i++)
 		histValues[i] = histValues[i]/sumLikelihood;
@@ -179,10 +197,10 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure
 
         totalLikelihood(stat, NCP);
 
-        printf("Total Likelihood= %e\n", total_likelihood);
-
 	for(int i = 0; i < snpCount; i++)
 		total_likelihood += postValues[i];
+
+	printf("Total Likelihood= %e SNP=%d \n", total_likelihood, snpCount);
 	
         std::vector<data> items;
         std::set<int>::iterator it;

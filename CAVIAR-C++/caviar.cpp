@@ -32,7 +32,7 @@ int main( int argc, char *argv[]  ){
 	while ((oc = getopt(argc, argv, "vhl:o:z:r:c:f:")) != -1) {
 		switch (oc) {
 			case 'v':
-				cout << "version 0.1" << endl;
+				cout << "version 0.2:" << endl;
 			case 'h':
 				cout << "Options: " << endl;
   				cout << "-h, --help            		show this help message and exit " << endl;
@@ -89,10 +89,7 @@ int main( int argc, char *argv[]  ){
 	snpNames  = new string [snpCount];
 
 	importData(ldFile, sigma);		
-	for(int i = 0; i < snpCount*snpCount; i++){
-                if(i%(snpCount+1) == 0)
-                        sigma[i] = sigma[i] + 0.2;
-        }
+	makeSigmaPositiveSemiDefinite(sigma, snpCount);
 
 	importDataFirstColumn(zFile, snpNames);
 	importDataSecondColumn(zFile, stat);

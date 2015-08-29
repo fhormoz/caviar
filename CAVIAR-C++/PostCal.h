@@ -49,7 +49,7 @@ public:
 		for(int i = 0; i < snpCount; i++) {
                 	for (int j = 0; j < snpCount; j++)
                        		gsl_matrix_set(sigmaMatrix,i,j,sigma[i*snpCount+j]);
-       		 }
+       		}
 		for(int i = 0; i < snpCount; i++) {
 			gsl_matrix * tmpMatrix1 = gsl_matrix_calloc (snpCount, snpCount);
 			gsl_matrix * tmpMatrix2 = gsl_matrix_calloc (snpCount, snpCount);
@@ -68,8 +68,19 @@ public:
 		}
 		invSigmaMatrix = gsl_matrix_calloc (snpCount, snpCount);
 		gsl_matrix_memcpy(invSigmaMatrix, sigmaMatrix);	
-		gsl_linalg_cholesky_decomp(invSigmaMatrix);
-	        gsl_linalg_cholesky_invert(invSigmaMatrix);
+		// GOOD FOR Positive deifnite matrices
+		//gsl_linalg_cholesky_decomp(invSigmaMatrix);
+	        //gsl_linalg_cholesky_invert(invSigmaMatrix);
+		//IF the matrix is not Positive deifnite
+		int tmpS = 0;
+		gsl_permutation * p = gsl_permutation_alloc (snpCount);
+		gsl_linalg_LU_decomp(sigmaMatrix, p, &tmpS);
+		gsl_linalg_LU_invert(sigmaMatrix, p, invSigmaMatrix);
+		for(int i = 0; i < snpCount; i++) {
+                        for (int j = 0; j < snpCount; j++)
+                                gsl_matrix_set(sigmaMatrix,i,j,sigma[i*snpCount+j]);
+                }
+		gsl_permutation_free(p);	
 	}
         ~PostCal() {
 		delete [] histValues;

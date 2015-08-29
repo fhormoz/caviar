@@ -307,3 +307,41 @@ void setIdentitymatrix(int * G, int snpCount, int geneCount) {
 		printf("\n");
         }
 }
+
+/*
+This function add const to diagonal to make the matrix positive semi definite.
+*/
+void makeSigmaPositiveSemiDefinite(double * sigma, int size) {
+	int gsl_tmp = 0;
+	double matDet  = 0;
+        double addDiag = 0;
+        bool positive = false;
+	
+	//gsl_set_error_handler_off();	
+	gsl_matrix * tmpResultMatrix = gsl_matrix_calloc (size, size);	
+	gsl_permutation *p = gsl_permutation_alloc(size);
+        do{
+		for(int i = 0; i < size; i++) {
+                	for (int j = 0; j < size; j++) {
+                      		if(i==j)
+					gsl_matrix_set(tmpResultMatrix,i,j,sigma[i*size+j]+addDiag);
+				else
+					gsl_matrix_set(tmpResultMatrix,i,j,sigma[i*size+j]);
+			}
+        	}
+	
+		gsl_linalg_LU_decomp(tmpResultMatrix, p, &gsl_tmp);
+       		matDet = gsl_linalg_LU_det(tmpResultMatrix,gsl_tmp);	
+		cout << matDet << "\t" << addDiag << endl;
+		if(matDet > 0 ) 
+			positive = true;
+		else {
+			cout << "add" << endl;
+			addDiag+=0.1;		
+		}
+	} while(!positive);
+	for(int i = 0; i < size*size; i++){
+                if(i%(size+1) == 0)
+                        sigma[i] = sigma[i] + addDiag;
+        }
+}
