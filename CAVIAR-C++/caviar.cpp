@@ -94,7 +94,7 @@ int main( int argc, char *argv[]  ){
 	importDataFirstColumn(zFile, snpNames);
 	importDataSecondColumn(zFile, stat);
 
-	PostCal post(sigma, snpCount, totalCausalSNP);
+	PostCal post(sigma, snpCount, totalCausalSNP, snpNames);
 	post.findOptimalSetGreedy(stat, NCP, configure, rank, rho);
 
 	ofstream outputFile;
@@ -104,7 +104,7 @@ int main( int argc, char *argv[]  ){
 		if(configure[i] == '1')
 			outputFile << snpNames[i] << endl;
 	}			
-
+	post.printPost2File(string(outputFileName)+"_post");
         //output the histogram data to file
         if(histFlag)
                 post.printHist2File(string(outputFileName)+"_hist");

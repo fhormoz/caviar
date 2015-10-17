@@ -204,6 +204,7 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure
 	
         std::vector<data> items;
         std::set<int>::iterator it;
+	//output the poster to files
         for(int i = 0; i < snpCount; i++) {
              //printf("%d==>%e ",i, postValues[i]/total_likelihood);
              items.push_back(data(postValues[i]/total_likelihood, i, 0));

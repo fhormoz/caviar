@@ -1,6 +1,8 @@
 #ifndef POSTCAL_H
 #define POSTCAL_H
 
+#include <iostream>
+#include <fstream>
 #include <map>
 
 #include <stdio.h>
@@ -28,10 +30,12 @@ private:
 	gsl_matrix * invSigmaMatrix;
 	gsl_matrix ** matrixPossibleCases; 	//Compute the set of matrixes which repearsent the \sigma \sigma_c \sigma
 	double baseValue;			//base value used for calculation for overflow	
+	string * snpNames;
 public:
 
-	PostCal(double * sigma, int snpCount, int maxCausalSNP) {
-                this-> snpCount = snpCount;
+	PostCal(double * sigma, int snpCount, int maxCausalSNP, string * snpNames) {
+                this->snpNames = snpNames;
+		this-> snpCount = snpCount;
 		this-> maxCausalSNP = maxCausalSNP;
                 this->sigma = new double[snpCount * snpCount];
 		this-> postValues = new double [snpCount];
@@ -97,6 +101,15 @@ public:
 	string convertConfig2String(int * config, int size);
 	void printHist2File(string fileName) {
 		exportVector2File(fileName, histValues, maxCausalSNP+1);
+	}
+	void printPost2File(string fileName) {
+		double total_likelihood = 0;
+		ofstream outfile(fileName.c_str(), ios::out | ios::app);	
+		for(int i = 0; i < snpCount; i++)
+                	total_likelihood += postValues[i];
+		for(int i = 0; i < snpCount; i++) {
+			outfile << snpNames[i] << "\t" << postValues[i]/total_likelihood << endl;
+		}
 	}
 
 };
