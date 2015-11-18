@@ -98,7 +98,7 @@ double PostCal::likelihood(int * configure, double * stat, double NCP) {
 	if(tmpFinalRes > 700) {
 		return(exp(700));
 	}
-	return( exp(-res/2)/sqrt(abs(matDet)) );	
+	return( (exp(-res/2))/sqrt(abs(matDet)) );	
 }
 
 int PostCal::nextBinary(int * data, int size) {

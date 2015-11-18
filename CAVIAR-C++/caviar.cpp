@@ -15,7 +15,7 @@ int main( int argc, char *argv[]  ){
 	int tmpSize = 0;
 	int totalCausalSNP = 2;
 	int snpCount  = 0;
-	double NCP = 5.7;
+	double NCP = 20;
 	double rho = 0;
 	double * sigma;
 	double * stat;

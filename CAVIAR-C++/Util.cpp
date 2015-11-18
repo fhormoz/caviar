@@ -43,12 +43,12 @@ long int nCr(int n, int r) {
 
 void printVector(char * data, int size) {
         for(int i = 0; i < size; i++)
-                printf("%c, ", data[i]);
+                printf("%c_", data[i]);
 }
 
 void printVector(int * data, int size) {
         for(int i = 0; i < size; i++)
-                printf("%d, ", (int)data[i]);
+                printf("%d_", (int)data[i]);
 }
 
 void printVector(double * data, int size) {
