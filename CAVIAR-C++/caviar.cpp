@@ -11,11 +11,12 @@
 
 using namespace std;
 
+
 int main( int argc, char *argv[]  ){
 	int tmpSize = 0;
 	int totalCausalSNP = 2;
 	int snpCount  = 0;
-	double NCP = 20;
+	double NCP = 5.7;
 	double rho = 0;
 	double * sigma;
 	double * stat;
@@ -32,7 +33,7 @@ int main( int argc, char *argv[]  ){
 	while ((oc = getopt(argc, argv, "vhl:o:z:r:c:f:")) != -1) {
 		switch (oc) {
 			case 'v':
-				cout << "version 0.4:" << endl;
+				cout << "version 0.3:" << endl;
 			case 'h':
 				cout << "Options: " << endl;
   				cout << "-h, --help            		show this help message and exit " << endl;
@@ -71,9 +72,9 @@ int main( int argc, char *argv[]  ){
 	
 	//program is running
 	cout << "@-------------------------------------------------------------@" << endl;
-	cout << "| CAVIAR!		| 	   v0.4         |  18/Nov/2015 | " << endl;
+	cout << "| CAVIAR!		| 	   v1.0         |  22/Apr/2016 | " << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
-	cout << "| (C) 2014 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
+	cout << "| (C) 2016 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
 	cout << "| For documentation, citation & bug-report instructions:      |" << endl;
 	cout << "| 		http://genetics.cs.ucla.edu/caviar/            |" << endl;
@@ -94,7 +95,7 @@ int main( int argc, char *argv[]  ){
 	importDataFirstColumn(zFile, snpNames);
 	importDataSecondColumn(zFile, stat);
 
-	PostCal post(sigma, snpCount, totalCausalSNP, snpNames);
+	PostCal post(sigma, stat, snpCount, totalCausalSNP, snpNames);
 	post.findOptimalSetGreedy(stat, NCP, configure, rank, rho);
 
 	ofstream outputFile;

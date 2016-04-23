@@ -12,9 +12,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-
 using namespace std;
-
 
 long int fact(int n) {
         if(n==0)
@@ -43,12 +41,12 @@ long int nCr(int n, int r) {
 
 void printVector(char * data, int size) {
         for(int i = 0; i < size; i++)
-                printf("%c_", data[i]);
+                printf("%c, ", data[i]);
 }
 
 void printVector(int * data, int size) {
         for(int i = 0; i < size; i++)
-                printf("%d_", (int)data[i]);
+                printf("%d, ", (int)data[i]);
 }
 
 void printVector(double * data, int size) {
@@ -163,61 +161,6 @@ string convertInt(int number) {
    return ss.str();//return a string with the contents of the stream
 }
 
-void rmvnorm(double * mean, double * sigma, int size, double * results) {
-	gsl_matrix * work = gsl_matrix_alloc(size,size);
-	gsl_vector * resultVector = gsl_vector_alloc(size);
-	gsl_vector * meanVector  = gsl_vector_alloc(size);
-	gsl_matrix * sigmaMatrix = gsl_matrix_alloc(size,size);
-	const gsl_rng_type * T;
-  	gsl_rng * r;	
-	gsl_rng_env_setup();
-	T = gsl_rng_default;
-  	r = gsl_rng_alloc (T);	
-	
-	for(int i = 0; i < size; i++) {
-		for(int j = 0; j < size; j++) {
-			gsl_matrix_set(sigmaMatrix,i,j,sigma[i*size + j]);
-		}
-		gsl_vector_set(meanVector,i ,mean[i]);
-	}	
-
-	gsl_matrix_memcpy(work, sigmaMatrix);
-	gsl_linalg_cholesky_decomp(work);
-	for(int i=0; i<size; i++)
-		gsl_vector_set( resultVector, i, gsl_ran_ugaussian(r) );
-
-	gsl_blas_dtrmv(CblasLower, CblasNoTrans, CblasNonUnit, work, resultVector);
-	gsl_vector_add(resultVector,meanVector);
-	gsl_matrix_free(work);
-	
-	for(int i = 0; i < size; i++)
-		results[i] = gsl_vector_get(resultVector, i);
-	
-	//gsl_matrix_free(work);
-	//gsl_vector_free(resultVector);
-	//gsl_vector_free(meanVector);
-	gsl_rng_free(r);
-}
-
-void generateMean(int * causalSNP, double * sigma, int size, double * result) {
-	gsl_matrix * resultMatrix = gsl_matrix_alloc(1,size);
-	gsl_matrix * sigmaMatrix = gsl_matrix_alloc(size,size);
-	gsl_matrix * causalSNPMatrix = gsl_matrix_alloc(1,size);
-	for(int i = 0; i < size; i++) {
-                for(int j = 0; j < size; j++) {
-                        gsl_matrix_set(sigmaMatrix,i,j,sigma[i*size + j]);
-                }
-		gsl_matrix_set(causalSNPMatrix, 0, i, 5.7 * causalSNP[i]);
-        }
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, causalSNPMatrix, sigmaMatrix, 0.0, resultMatrix);
-	for(int i = 0; i < size; i++)                   
-                result[i] = gsl_matrix_get(resultMatrix, 0, i);
-
-	gsl_matrix_free(sigmaMatrix); 
-	gsl_matrix_free(resultMatrix);
-	gsl_matrix_free(causalSNPMatrix); 
-}
-
 void resetVector(char *data, int size){
 	for(int i = 0; i < size; i++)
 		data[i] = '0';
@@ -263,28 +206,6 @@ void export2File(string fileName, int data) {
         outfile.close();
 }
 
-// cData = aData * bData
-void matrixMul(int * aData, int * bData, int * cData, int row1, int col1, int row2, int col2) {
-	gsl_matrix * aMatrix = gsl_matrix_alloc(row1,col1);
-        gsl_matrix * bMatrix = gsl_matrix_alloc(row2,col2);
-	gsl_matrix * cMatrix = gsl_matrix_alloc(row1,col2);
-	if(col1 == row2) {
-		for(int i = 0; i < row1; i++)
-			for(int j = 0; j < col1; j++)
-				gsl_matrix_set(aMatrix,i,j,aData[i*col1 + j]);
-		for(int i = 0; i < row2; i++) 
-                        for(int j = 0; j < col2; j++)
-                                gsl_matrix_set(bMatrix,i,j,bData[i*col2 + j]);	
-		gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, aMatrix, bMatrix, 0.0, cMatrix);
-		for(int i = 0; i < row1; i++)
-			for(int j = 0; j < col2; j++) 
-				cData[i * col2 + j] =  (int)gsl_matrix_get(cMatrix, i, j);
-	}	
-	gsl_matrix_free(aMatrix);
-	gsl_matrix_free(bMatrix);
-	gsl_matrix_free(cMatrix);
-}
-
 int snp2Gene(int * G, int snpId, int snpCount, int geneCount) {
 	for(int i = 0; i < geneCount; i++) {
 		if(G[snpId*geneCount + i] == 1)
@@ -308,9 +229,6 @@ void setIdentitymatrix(int * G, int snpCount, int geneCount) {
         }
 }
 
-/*
-This function add const to diagonal to make the matrix positive semi definite.
-*/
 void makeSigmaPositiveSemiDefinite(double * sigma, int size) {
 	int gsl_tmp = 0;
 	double matDet  = 0;

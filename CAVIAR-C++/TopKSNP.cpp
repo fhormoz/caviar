@@ -5,6 +5,7 @@
 #include "Util.h"
 #include "TopKSNP.h"
 
+
 void TopKSNP::findCausal(int * topKConfigure) {
 	std::vector<data> items;
 	std::set<int> geneSet;

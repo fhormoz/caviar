@@ -2,18 +2,20 @@
 #include <algorithm>
 #include <set>
 #include <iostream>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_blas.h>
+#include <armadillo>
 
 #include "Util.h"
 #include "PostCal.h"
 
 #define SMALL 0.001
 
-void printGSLPrint(gsl_matrix *A, int row, int col) {
+using namespace arma;
+
+
+void printGSLPrint(mat &A, int row, int col) {
 	for(int i = 0; i < row; i++) {
 		for(int j = 0; j < col; j++)
-			printf("%g ", gsl_matrix_get(A, i, j));
+			printf("%g ", A(i, j));
 		printf("\n");
 	}	
 }
@@ -27,63 +29,46 @@ string PostCal::convertConfig2String(int * config, int size) {
 }
 
 double PostCal::likelihood(int * configure, double * stat, double NCP) {
-	int coutOne = 0;
-	int gsl_tmp = 0;
+	int causalCount = 0;
+	int index_C = 0;
         double matDet = 0;
 	double res    = 0;
 
-	gsl_matrix * statMatrix                 = gsl_matrix_calloc (snpCount, 1);
-	gsl_matrix * statMatrixtTran            = gsl_matrix_calloc (1, snpCount);
-	gsl_matrix * configMatrix		= gsl_matrix_calloc (snpCount, 1);
-
-	gsl_matrix * tmpResultMatrix		= gsl_matrix_calloc (snpCount, 1);
-	gsl_matrix * tmpResultMatrix1 		= gsl_matrix_calloc (snpCount, snpCount);
-	gsl_matrix * tmpResultMatrix2           = gsl_matrix_calloc (snpCount, snpCount);
-	gsl_matrix * tmpResultMatrix1N		= gsl_matrix_calloc (1, snpCount);
-	gsl_matrix * tmpResultMatrix11          = gsl_matrix_calloc (1, 1);
-
-        for(int i = 0; i < snpCount; i++) {
-                gsl_matrix_set(statMatrix,i,0,stat[i]);
-                gsl_matrix_set(statMatrixtTran,0,i,stat[i]);
-        	coutOne += configure[i];
-	}
-	gsl_matrix_memcpy(tmpResultMatrix1, sigmaMatrix);
-	for(int i = 0; i < snpCount; i++) {
-		if(configure[i] == 1){
-			gsl_matrix_memcpy(tmpResultMatrix2, matrixPossibleCases[i]); 
-			gsl_matrix_scale(tmpResultMatrix2, NCP);
-			gsl_matrix_add(tmpResultMatrix1, tmpResultMatrix2);
-		}
-	}
-
-	gsl_matrix_memcpy(tmpResultMatrix2, tmpResultMatrix1);
-	gsl_permutation *p = gsl_permutation_alloc(snpCount);
-        gsl_linalg_LU_decomp(tmpResultMatrix2, p, &gsl_tmp );
-        matDet = gsl_linalg_LU_det(tmpResultMatrix2,gsl_tmp);
-
-	//gsl_linalg_cholesky_decomp(tmpResultMatrix1);
-        //gsl_linalg_cholesky_invert(tmpResultMatrix1);	
-        gsl_linalg_LU_invert(tmpResultMatrix2, p, tmpResultMatrix1);
-
-	gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, statMatrixtTran, tmpResultMatrix1, 0.0, tmpResultMatrix1N);
-        gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, tmpResultMatrix1N, statMatrix, 0.0, tmpResultMatrix11);	
-
-	res = gsl_matrix_get(tmpResultMatrix11,0,0);
-
-	gsl_matrix_free(tmpResultMatrix);
-	gsl_matrix_free(tmpResultMatrix1);
-	gsl_matrix_free(tmpResultMatrix2);
-	gsl_matrix_free(tmpResultMatrix1N);
-	gsl_matrix_free(tmpResultMatrix11);
-	gsl_matrix_free(statMatrix);
-	gsl_matrix_free(statMatrixtTran);
-	gsl_matrix_free(configMatrix);
-	gsl_permutation_free(p);
-
-	if(baseValue == 0)
+	for(int i = 0; i < snpCount; i++) 
+		causalCount += configure[i];
+	if(causalCount == 0){
+		mat tmpResultMatrix1N = statMatrixtTran * invSigmaMatrix;
+		mat tmpResultMatrix11 = tmpResultMatrix1N * statMatrix;
+		res = tmpResultMatrix11(0,0);	
 		baseValue = res;
-	res = res - baseValue;
+		matDet = sigmaDet;
+		res = res - baseValue;
+		return( exp(-res/2)/sqrt(abs(matDet)) );
+	}
+	mat U(snpCount, causalCount, fill::zeros);
+	mat V(causalCount, snpCount, fill::zeros);
+	mat VU(causalCount, causalCount, fill::zeros);
+		
+	for(int i = 0; i < snpCount; i++) {
+                if (configure[i] == 0)	continue;
+                else {
+                        for(int j = 0; j < snpCount; j++) 
+                                U(j, index_C) = sigmaMatrix(j,i);
+			V(index_C, i) = NCP;
+                        index_C++;
+                }
+        }
+	VU = V * U;
+	mat I_AA   = mat(snpCount, snpCount, fill::eye);
+	mat tmp_CC = mat(causalCount, causalCount, fill::eye)+ VU;
+	matDet = det(tmp_CC) * sigmaDet;
+	mat tmp_AA = invSigmaMatrix - (invSigmaMatrix * U) * pinv(tmp_CC) * V ;
+	//tmp_AA     = invSigmaMatrix * tmp_AA;
+	mat tmpResultMatrix1N = statMatrixtTran * tmp_AA;
+        mat tmpResultMatrix11 = tmpResultMatrix1N * statMatrix;
+        res = tmpResultMatrix11(0,0);  
 
+	res = res - baseValue;
 	if(matDet==0) {
 		cout << "Error the matrix is singular and we fail to fix it." << endl;
 		exit(0);
@@ -94,11 +79,9 @@ double PostCal::likelihood(int * configure, double * stat, double NCP) {
 	*/
 	double tmplogDet = log(sqrt(abs(matDet)));
 	double tmpFinalRes = -res/2 - tmplogDet;
-
-	if(tmpFinalRes > 700) {
+	if(tmpFinalRes > 700) 
 		return(exp(700));
-	}
-	return( (exp(-res/2))/sqrt(abs(matDet)) );	
+	return( exp(-res/2)/sqrt(abs(matDet)) );	
 }
 
 int PostCal::nextBinary(int * data, int size) {
@@ -156,7 +139,7 @@ int PostCal::nextBinary(int * data, int size) {
 	return(total_one);		
 }
 
-double PostCal::totalLikelihood(double * stat, double NCP) {	
+double PostCal::computeTotalLikelihood(double * stat, double NCP) {	
 	int num = 0;
 	double sumLikelihood = 0;
 	double tmp_likelihood = 0;
@@ -176,7 +159,7 @@ double PostCal::totalLikelihood(double * stat, double NCP) {
 		}
 		histValues[num] = histValues[num] + tmp_likelihood;
                 num = nextBinary(configure, snpCount);
-       		if(i % 1000 == 0)
+       		if(i % 100000 == 0)
 			cout << i << " "  << sumLikelihood << endl;
 	}
 	for(int i = 0; i <= maxCausalSNP; i++)
@@ -193,21 +176,21 @@ double PostCal::totalLikelihood(double * stat, double NCP) {
 double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure, int *rank,  double inputRho) {
 	int index = 0;
         double rho = 0;
-        double total_likelihood = 0;
+        double total_post = 0;
 
-        totalLikelihood(stat, NCP);
+        totalLikeLihood = computeTotalLikelihood(stat, NCP);
 
 	for(int i = 0; i < snpCount; i++)
-		total_likelihood += postValues[i];
+		total_post += postValues[i];
 
-	printf("Total Likelihood= %e SNP=%d \n", total_likelihood, snpCount);
+	printf("Total Likelihood= %e SNP=%d \n", total_post, snpCount);
 	
         std::vector<data> items;
         std::set<int>::iterator it;
 	//output the poster to files
         for(int i = 0; i < snpCount; i++) {
              //printf("%d==>%e ",i, postValues[i]/total_likelihood);
-             items.push_back(data(postValues[i]/total_likelihood, i, 0));
+             items.push_back(data(postValues[i]/total_post, i, 0));
         }
         printf("\n");
         std::sort(items.begin(), items.end(), by_number());
@@ -217,7 +200,7 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure
         for(int i = 0; i < snpCount; i++)
                 configure[i] = '0';
         do{
-                rho += postValues[rank[index]]/total_likelihood;
+                rho += postValues[rank[index]]/total_post;
                 configure[rank[index]] = '1';
                 printf("%d %e\n", rank[index], rho);
                 index++;
