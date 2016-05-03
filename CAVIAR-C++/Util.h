@@ -43,6 +43,7 @@ using namespace std;
 	void importData(string fileName, double * vector);
 	void importData(string fileName, int * vector);
 	void importDataSecondColumn(string fileName, double * vector);
+	void importDataNthColumn(string fileName, double * vector, int colNum);
 	void importDataFirstColumn(string fileName, string * list);
 	void rmvnorm(double * mean, double * sigma, int size, double * results);
 	void resetVector(char *data, int size);

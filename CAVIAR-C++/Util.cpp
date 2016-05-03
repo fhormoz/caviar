@@ -111,8 +111,9 @@ void importData(string fileName, int * vector) {
         }
         fin.close();
 }
+
 /*
-the column index starts by 1 in this implemenation
+	The column index starts by 1 in this implemenation
 */
 void importDataSecondColumn(string fileName, double * vector) {
 	int index = 0;
@@ -131,6 +132,27 @@ void importDataSecondColumn(string fileName, double * vector) {
         fin.close();
 }
 
+/*
+	The column index starts by 1 in this implemenation
+*/
+void importDataNthColumn(string fileName, double * vector, int colNum) {
+        int index = 0;
+        string line = "";
+        string dataS = "";
+        double data = 0.0;
+	ifstream fin(fileName.c_str(), std::ifstream::in);
+        while( getline(fin, line) ){
+                istringstream iss(line);
+                iss >> dataS;
+                for(int i = 0; i < colNum-1;i++)
+			iss >> data;
+                vector[index] = (double)data;
+                index++;
+        }
+        cout << "reach=" << index << endl;
+        fin.close();
+}
+
 void importDataFirstColumn(string fileName, string * list) {
  	int index = 0;
         string data = "";
@@ -142,10 +164,12 @@ void importDataFirstColumn(string fileName, string * list) {
                 list[index] = data;
 		index++;
         }
+	cout << "FINISH" << endl;
         fin.close();
 }
 
 void fileSize(string fileName, int & size) {
+	size = 0;
 	double data = 0;	
 	ifstream fin(fileName.c_str(), std::ifstream::in);
 	while( fin.good()  ){
