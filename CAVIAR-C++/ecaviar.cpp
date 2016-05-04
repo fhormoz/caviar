@@ -8,10 +8,12 @@
 #include <unistd.h> 
 
 #include "Util.h"
+#include "PostCal.h"
+#include "CaviarModel.h"
 
 using namespace std;
 
-bool checkInputFiles(string zFile1, string zFile2, string ldFile1, string ldFile2, string outputFileName, string rho) {
+bool checkInputFiles(string zFile1, string zFile2, string ldFile1, string ldFile2, string outputFileName) {
 	int size = 0;
 	int snpCount1 = 0;
 	int snpCount2 = 0;
@@ -30,10 +32,7 @@ bool checkInputFiles(string zFile1, string zFile2, string ldFile1, string ldFile
         } else if (outputFileName=="") {
 		cout << "Error: The output file is not give" << endl;
 		return(false);
-	} else if(rho == "") {
-		cout << "Error: The rho value is not give" << endl;
-                return(false);
-	}
+	} 
 	fileSize(ldFile1, size);
         snpCount1 = (int)sqrt(size);
         fileSize(ldFile2, size);
@@ -47,17 +46,16 @@ bool checkInputFiles(string zFile1, string zFile2, string ldFile1, string ldFile
 
 int main( int argc, char *argv[]  ){
 	int oc = 0;
-	int tmpSize = 0;
-	int snpCount1  = 0;	
-	int snpCount2  = 0;
+	int snpCount = 0;	
 
-	double * sigma;
 	double * stat1;
 	double * stat2;
 	string * snpNames;
 
-	string rho = "";
-        string totalCausalSNP = "2";
+	double NCP = 5.7;
+	double rho = 0;
+        int totalCausalSNP = 2;
+	bool histFlag;
 	string tmpLDFileNames = "";
 	string ldFile1 = "";
 	string zFile1  = "";
@@ -65,7 +63,7 @@ int main( int argc, char *argv[]  ){
         string zFile2  = "";
 	string outputFileName = "";
 
-	while ((oc = getopt(argc, argv, "vhl:o:z:r:c:")) != -1) {
+	while ((oc = getopt(argc, argv, "vhl:o:z:r:c:f:")) != -1) {
 		switch (oc) {
 			case 'v':
 				cout << "version 1.0:" << endl;
@@ -95,13 +93,13 @@ int main( int argc, char *argv[]  ){
                                         zFile2 = string(optarg);
 				break;
 			case 'r':
-				rho = string(optarg);
+				rho = atof(optarg);
 				break;
 			case 'c':
-				totalCausalSNP = string(optarg);
+				totalCausalSNP = atoi(optarg);
 				break;
 			case 'f':
-                                //histFlag = true;
+                                histFlag = true;
                                 break;
 			case ':':
 			case '?':
@@ -122,31 +120,29 @@ int main( int argc, char *argv[]  ){
 	cout << "@-------------------------------------------------------------@" << endl;	
 
 	//Check the input is right?
-	if( !checkInputFiles(zFile1, zFile2, ldFile1, ldFile2, outputFileName, rho) )
+	if( !checkInputFiles(zFile1, zFile2, ldFile1, ldFile2, outputFileName) )
 		return(0);
-	fileSize(ldFile1, tmpSize);
-        snpCount1 = (int)sqrt(tmpSize);
-	fileSize(ldFile2, tmpSize);
-	snpCount2 = (int)sqrt(tmpSize);
+		
+	CaviarModel gwasModel(ldFile1, zFile1, outputFileName + "_1", totalCausalSNP, NCP, rho, histFlag);
+	gwasModel.run();
+	gwasModel.finishUp();
+	CaviarModel eqtlModel(ldFile2, zFile2, outputFileName + "_2", totalCausalSNP, NCP, rho, histFlag);	
+	eqtlModel.run();
+	eqtlModel.finishUp();	
 
-	string command1 = "./CAVIAR -z " + zFile1 + " -l " + ldFile1 + " -c " + totalCausalSNP  + " -r " + rho  + " -o " + outputFileName+"_1";  	
-	string command2 = "./CAVIAR -z " + zFile1 + " -l " + ldFile1 + " -c " + totalCausalSNP  + " -r " + rho  + " -o " + outputFileName+"_2";
-	system(command1.c_str());
-        system(command2.c_str());
-
-	snpNames  = new string [snpCount1];
-	stat1     = new double [snpCount1];	
-	stat2     = new double [snpCount1];	
-
+	snpCount  = gwasModel.snpCount;
+	snpNames  = new string [snpCount];
+	stat1     = new double [snpCount];	
+	stat2     = new double [snpCount];	
 	importDataFirstColumn(outputFileName+"_1"+"_post", snpNames);
 	importDataNthColumn(outputFileName+"_1"+"_post", stat1, 3);	
 	importDataNthColumn(outputFileName+"_2"+"_post", stat2, 3);	
-
-	ofstream outfile(outputFileName.c_str(), ios::out | ios::app);	
-	for(int i = 0; i < snpCount1; i++) {
+	ofstream outfile( (outputFileName+"_col").c_str(), ios::out | ios::app);	
+	for(int i = 0; i < snpCount; i++) {
 		outfile << snpNames[i] << "\t" << stat1[i] * stat2[i] << endl;
 	}	
 	outfile.close();
-
+	//system(("rm "+ outputFileName + "_1_post").c_str());
+	//system(("rm "+ outputFileName + "_2_post").c_str());	
 	return 0;
 }

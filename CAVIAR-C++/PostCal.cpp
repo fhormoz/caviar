@@ -148,7 +148,9 @@ double PostCal::computeTotalLikelihood(double * stat, double NCP) {
 
 	for(long int i = 0; i <= maxCausalSNP; i++)
 		total_iteration = total_iteration + nCr(snpCount, i);
-
+	cout << snpCount << endl;
+	cout << "Max Causal=" << maxCausalSNP << endl;
+	cout << "Total="      << total_iteration << endl;
 	for(long int i = 0; i < snpCount; i++) 
 		configure[i] = 0;
 	for(long int i = 0; i < total_iteration; i++) {

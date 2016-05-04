@@ -8,22 +8,16 @@
 #include "Util.h"
 #include "PostCal.h"
 #include "TopKSNP.h"
+#include "CaviarModel.h"
 
 using namespace std;
 
 
 int main( int argc, char *argv[]  ){
-	int tmpSize = 0;
 	int totalCausalSNP = 2;
-	int snpCount  = 0;
 	double NCP = 5.7;
 	double rho = 0;
-	double * sigma;
-	double * stat;
-	char * configure;
-	int * rank;
 	bool histFlag = false;
-	string * snpNames;
 	int oc = 0;	
 	string ldFile = "";
 	string zFile  = "";
@@ -80,35 +74,8 @@ int main( int argc, char *argv[]  ){
 	cout << "| 		http://genetics.cs.ucla.edu/caviar/            |" << endl;
 	cout << "@-------------------------------------------------------------@" << endl;	
 
-	fileSize(ldFile, tmpSize);
-	snpCount = (int)sqrt(tmpSize);
-	
-	sigma     = new double[snpCount * snpCount];
-        stat      = new double[snpCount];
-        configure = new char[snpCount];
-        rank      = new int[snpCount];
-	snpNames  = new string [snpCount];
-
-	importData(ldFile, sigma);		
-	makeSigmaPositiveSemiDefinite(sigma, snpCount);
-
-	importDataFirstColumn(zFile, snpNames);
-	importDataSecondColumn(zFile, stat);
-
-	PostCal post(sigma, stat, snpCount, totalCausalSNP, snpNames);
-	post.findOptimalSetGreedy(stat, NCP, configure, rank, rho);
-
-	ofstream outputFile;
-	string outFileNameSet = string(outputFileName)+"_set";
-	outputFile.open(outFileNameSet.c_str());
-	for(int i = 0; i < snpCount; i++) {
-		if(configure[i] == '1')
-			outputFile << snpNames[i] << endl;
-	}			
-	post.printPost2File(string(outputFileName)+"_post");
-        //output the histogram data to file
-        if(histFlag)
-                post.printHist2File(string(outputFileName)+"_hist");
-	
+	CaviarModel caviar(ldFile, zFile, outputFileName, totalCausalSNP, NCP, rho, histFlag);
+	caviar.run();
+	caviar.finishUp();		
 	return 0;
 }
