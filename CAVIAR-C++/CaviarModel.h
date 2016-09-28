@@ -24,6 +24,7 @@ class CaviarModel{
 public:
 	double rho;
 	double NCP;
+	double gamma;
 	int snpCount;
 	int totalCausalSNP;
 	double * sigma;
@@ -38,11 +39,12 @@ public:
         string outputFileName;
         string geneMapFile;	
 
-	CaviarModel(string ldFile, string zFile, string outputFileName, int totalCausalSNP, double NCP, double rho, bool histFlag) {
+	CaviarModel(string ldFile, string zFile, string outputFileName, int totalCausalSNP, double NCP, double rho, bool histFlag, double gamma=0.01) {
 		int tmpSize = 0;
 		this->histFlag = histFlag;
 		this->NCP = NCP;
 		this->rho = rho;
+		this->gamma = gamma;
 		this->ldFile = ldFile;
 		this->zFile  = zFile;
 		this->outputFileName = outputFileName;
@@ -56,9 +58,12 @@ public:
 		snpNames  = new string [snpCount];
 		importData(ldFile, sigma);
 		makeSigmaPositiveSemiDefinite(sigma, snpCount);
+		for(int i = 0; i < snpCount*snpCount; i++)
+			cout << sigma[i] << " ";
+		cout << endl;
 		importDataFirstColumn(zFile, snpNames);
 		importDataSecondColumn(zFile, stat);
-		post = new PostCal(sigma, stat, snpCount, totalCausalSNP, snpNames);
+		post = new PostCal(sigma, stat, snpCount, totalCausalSNP, snpNames, gamma);
 	}
 	void run() {
         	post->findOptimalSetGreedy(stat, NCP, configure, rank, rho);
