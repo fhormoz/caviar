@@ -138,8 +138,12 @@ int main( int argc, char *argv[]  ){
 	importDataNthColumn(outputFileName+"_1"+"_post", stat1, 3);	
 	importDataNthColumn(outputFileName+"_2"+"_post", stat2, 3);	
 	ofstream outfile( (outputFileName+"_col").c_str(), ios::out | ios::app);	
+	double sumCLPP = 0;
 	for(int i = 0; i < snpCount; i++) {
-		outfile << snpNames[i] << "\t" << stat1[i] * stat2[i] << endl;
+		sumCLPP = sumCLPP + stat1[i] * stat2[i];
+	}
+	for(int i = 0; i < snpCount; i++) {
+		outfile << snpNames[i] << "\t" << stat1[i] * stat2[i]  << "\t" << (stat1[i] * stat2[i])/sumCLPP << endl;
 	}	
 	outfile.close();
 	//system(("rm "+ outputFileName + "_1_post").c_str());

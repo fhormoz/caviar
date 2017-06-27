@@ -7,8 +7,6 @@
 #include "Util.h"
 #include "PostCal.h"
 
-#define SMALL 0.001
-
 using namespace arma;
 
 
@@ -154,7 +152,7 @@ double PostCal::computeTotalLikelihood(double * stat, double NCP) {
 	for(long int i = 0; i < snpCount; i++) 
 		configure[i] = 0;
 	for(long int i = 0; i < total_iteration; i++) {
-                tmp_likelihood = likelihood(configure, stat, NCP) * (pow(SMALL, num))*(pow(1-SMALL, snpCount-num));
+                tmp_likelihood = likelihood(configure, stat, NCP) * (pow(gamma, num))*(pow(1-gamma, snpCount-num));
                 sumLikelihood += tmp_likelihood;
 		for(int j = 0; j < snpCount; j++) {
                         postValues[j] = postValues[j] + tmp_likelihood * configure[j];

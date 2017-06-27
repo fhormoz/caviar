@@ -20,6 +20,7 @@ void printGSLPrint(mat A, int row, int col);
 class PostCal{
 
 private:
+	double gamma;		// the probability of SNP being causal
 	double * postValues;	//the posterior value for each SNP being causal
 	double * sigma;		//the LD matrix
 	double * histValues;	//the probability of the number of causal SNPs, we make the histogram of the causal SNPs
@@ -37,8 +38,9 @@ private:
 	string * snpNames;
 public:
 
-	PostCal(double * sigma, double * stat, int snpCount, int maxCausalSNP, string * snpNames) {
+	PostCal(double * sigma, double * stat, int snpCount, int maxCausalSNP, string * snpNames, double gamma) {
 		baseValue = 0;
+		this->gamma = gamma;
 		this->snpNames = snpNames;
 		this-> snpCount = snpCount;
 		this-> maxCausalSNP = maxCausalSNP;
