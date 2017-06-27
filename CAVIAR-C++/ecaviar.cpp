@@ -111,7 +111,7 @@ int main( int argc, char *argv[]  ){
 
 	//program is running
 	cout << "@-------------------------------------------------------------@" << endl;
-	cout << "| eCAVIAR!     	| 	   v1.0         |  22/Apr/2016 | " << endl;
+	cout << "| eCAVIAR!     	| 	   v1.0         |  28/Sep/2016 | " << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
 	cout << "| (C) 2016 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
