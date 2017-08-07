@@ -96,9 +96,10 @@ public:
 
 	void printPost2File(string fileName) {
 		double total_post = 0;
-		ofstream outfile(fileName.c_str(), ios::out | ios::app);	
+		ofstream outfile(fileName.c_str(), ios::out );	
 		for(int i = 0; i < snpCount; i++)
                 	total_post += postValues[i];
+		outfile << "SNP_ID\tProb_in_pCausalSet\tCausal_Post._Prob." << endl; 
 		for(int i = 0; i < snpCount; i++) {
 			outfile << snpNames[i] << "\t" << postValues[i]/total_post << "\t" << postValues[i]/totalLikeLihood << endl;
 		}
