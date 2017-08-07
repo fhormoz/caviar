@@ -66,7 +66,7 @@ int main( int argc, char *argv[]  ){
 	while ((oc = getopt(argc, argv, "vhl:o:z:r:c:f:")) != -1) {
 		switch (oc) {
 			case 'v':
-				cout << "version 1.0:" << endl;
+				cout << "version 2.0:" << endl;
 			case 'h':
 				cout << "Options: " << endl;
   				cout << "-h, --help            		show this help message and exit " << endl;
@@ -111,9 +111,9 @@ int main( int argc, char *argv[]  ){
 
 	//program is running
 	cout << "@-------------------------------------------------------------@" << endl;
-	cout << "| eCAVIAR!     	| 	   v1.0         |  28/Sep/2016 | " << endl;
+	cout << "| eCAVIAR!     	| 	   v2.0         |  01/Aug/2017 | " << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
-	cout << "| (C) 2016 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
+	cout << "| (C) 2017 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
 	cout << "| For documentation, citation & bug-report instructions:      |" << endl;
 	cout << "| 		http://genetics.cs.ucla.edu/caviar/            |" << endl;

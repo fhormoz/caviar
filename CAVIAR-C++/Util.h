@@ -54,6 +54,7 @@ using namespace std;
 	void exportVector2File(string fileName, int * data, int size);
 	void exportVector2File(string fileName, double * data, int size);
 	void export2File(string fileName, int data);
+	void export2File(string fileName, double data);
 	void matrixMul(int * aData, int * bData, int * cData, int row1, int col1, int row2, int col2);
 	int snp2Gene(int * G, int snpId, int snpCount, int geneCount);
 	void setIdentitymatrix(int * G, int snpCount, int geneCount);

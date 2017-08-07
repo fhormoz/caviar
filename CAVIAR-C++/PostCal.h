@@ -77,14 +77,23 @@ public:
                 delete [] sigma;
 	}
 
+	bool validConfigutation(int * configure, char * pcausalSet);
+	void computeALLCausalSetConfiguration(double * stat, double NCP, char * pcausalSet, string outputFileName);
+
+
+	double dmvnorm(mat Z, mat mean, mat R);
+        double fracdmvnorm(mat Z, mat mean, mat R, mat diagC, double NCP);
+
+        double fastLikelihood(int * configure, double * stat, double NCP);
 	double likelihood(int * configure, double * stat, double NCP) ;
 	int nextBinary(int * data, int size) ;
 	double computeTotalLikelihood(double * stat, double NCP) ;	
-	double findOptimalSetGreedy(double * stat, double NCP, char * configure, int *rank,  double inputRho);
+	double findOptimalSetGreedy(double * stat, double NCP, char * pcausalSet, int *rank,  double inputRho, string outputFileName);
 	string convertConfig2String(int * config, int size);
 	void printHist2File(string fileName) {
 		exportVector2File(fileName, histValues, maxCausalSNP+1);
 	}
+
 	void printPost2File(string fileName) {
 		double total_post = 0;
 		ofstream outfile(fileName.c_str(), ios::out | ios::app);	

@@ -82,5 +82,6 @@ int main( int argc, char *argv[]  ){
 	CaviarModel caviar(ldFile, zFile, outputFileName, totalCausalSNP, NCP, rho, histFlag, gamma);
 	caviar.run();
 	caviar.finishUp();		
+	caviar.printLogData();
 	return 0;
 }

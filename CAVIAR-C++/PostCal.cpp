@@ -26,6 +26,55 @@ string PostCal::convertConfig2String(int * config, int size) {
 	return result;
 }
 
+// We compute dmvnorm(Zcc, mean=rep(0,nrow(Rcc)), Rcc + Rcc %*% Rcc) / dmvnorm(Zcc, rep(0, nrow(Rcc)), Rcc))
+// // togheter to avoid numerical over flow
+double PostCal::fracdmvnorm(mat Z, mat mean, mat R, mat diagC, double NCP) {
+        mat newR = R + R * diagC  * R;
+        mat ZcenterMean = Z - mean;
+        mat res1 = trans(ZcenterMean) * inv(R) * (ZcenterMean);
+        mat res2 = trans(ZcenterMean) * inv(newR) *  (ZcenterMean);
+
+        double v1 = res1(0,0)/2-res2(0,0)/2;
+        return(exp(v1)/sqrt(det(newR))* sqrt(det(R)));
+}
+
+double PostCal::dmvnorm(mat Z, mat mean, mat R) {
+        mat ZcenterMean = Z - mean;
+        mat res = trans(ZcenterMean) * inv(R) * (ZcenterMean);
+        double v1 = res(0,0);
+        double v2 = log(sqrt(det(R)));
+        return (exp(-v1/2-v2));
+}
+
+// cc=causal SNPs
+// Rcc = LD of causal SNPs
+// Zcc = Z-score of causal SNPs
+// dmvnorm(Zcc, mean=rep(0,nrow(Rcc)), Rcc + Rcc %*% Rcc) / dmvnorm(Zcc, rep(0, nrow(Rcc)), Rcc))
+//
+double PostCal::fastLikelihood(int * configure, double * stat, double NCP) {
+	int causalCount = 0;
+	vector <int> causalIndex;
+
+	for(int i = 0; i < snpCount; i++) {
+		causalCount += configure[i];
+		if(configure[i] == 1)
+			causalIndex.push_back(i);
+	}
+	mat Rcc(causalCount, causalCount, fill::zeros);
+	mat Zcc(causalCount, 1, fill::zeros);
+	mat mean(causalCount, 1, fill::zeros);
+	mat diagC(causalCount, causalCount, fill::zeros);
+
+	for (int i = 0; i < causalCount; i++){
+		for(int j = 0; j < causalCount; j++) {
+			Rcc(i,j) = sigmaMatrix(causalIndex[i], causalIndex[j]);
+		}
+		Zcc(i,0) = stat[causalIndex[i]];
+		diagC(i,i) = NCP;
+	}
+	return fracdmvnorm(Zcc, mean, Rcc, diagC, NCP);
+}
+
 double PostCal::likelihood(int * configure, double * stat, double NCP) {
 	int causalCount = 0;
 	int index_C = 0;
@@ -152,7 +201,7 @@ double PostCal::computeTotalLikelihood(double * stat, double NCP) {
 	for(long int i = 0; i < snpCount; i++) 
 		configure[i] = 0;
 	for(long int i = 0; i < total_iteration; i++) {
-                tmp_likelihood = likelihood(configure, stat, NCP) * (pow(gamma, num))*(pow(1-gamma, snpCount-num));
+                tmp_likelihood = fastLikelihood(configure, stat, NCP) * (pow(gamma, num))*(pow(1-gamma, snpCount-num));
                 sumLikelihood += tmp_likelihood;
 		for(int j = 0; j < snpCount; j++) {
                         postValues[j] = postValues[j] + tmp_likelihood * configure[j];
@@ -168,21 +217,56 @@ double PostCal::computeTotalLikelihood(double * stat, double NCP) {
         return(sumLikelihood);
 }
 
+bool PostCal::validConfigutation(int * configure, char * pcausalSet) {
+	for(int i = 0; i < snpCount; i++){
+		if(configure[i] == 1 && pcausalSet[i] == '0')
+			return false;
+	}
+	return true;	
+}
+
+/*
+ * This is a auxilary function used to generate all possible causal set that 
+ * are selected in the p-causal set
+*/
+void PostCal::computeALLCausalSetConfiguration(double * stat, double NCP, char * pcausalSet, string outputFileName) {
+	int num = 0;
+        double sumLikelihood = 0;
+        double tmp_likelihood = 0;
+        long int total_iteration = 0 ;
+        int * configure = (int *) malloc (snpCount * sizeof(int *)); // original data   
+
+        for(long int i = 0; i <= maxCausalSNP; i++)
+                total_iteration = total_iteration + nCr(snpCount, i);
+        for(long int i = 0; i < snpCount; i++)
+                configure[i] = 0;
+        for(long int i = 0; i < total_iteration; i++) {
+		if (validConfigutation(configure, pcausalSet)) {
+                	tmp_likelihood = fastLikelihood(configure, stat, NCP) * (pow(gamma, num))*(pow(1-gamma, snpCount-num));
+			//printVector(configure, snpCount);
+			//cout << " " << tmp_likelihood << endl;
+			exportVector2File(outputFileName, configure, snpCount);
+			export2File(outputFileName, tmp_likelihood);
+		}
+		num = nextBinary(configure, snpCount);
+	}
+}
+
 /*
 	stat is the z-scpres
 	sigma is the correaltion matrix
 	G is the map between snp and the gene (snp, gene)
 */
-double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure, int *rank,  double inputRho) {
+double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * pcausalSet, int *rank,  double inputRho, string outputFileName) {
 	int index = 0;
         double rho = 0;
         double total_post = 0;
 
         totalLikeLihood = computeTotalLikelihood(stat, NCP);
-
+	
+	export2File(outputFileName+".log", totalLikeLihood); //Output the total likelihood to the log File
 	for(int i = 0; i < snpCount; i++)
 		total_post += postValues[i];
-
 	printf("Total Likelihood= %e SNP=%d \n", total_post, snpCount);
 	
         std::vector<data> items;
@@ -198,10 +282,10 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * configure
                 rank[i] = items[i].index1;
 
         for(int i = 0; i < snpCount; i++)
-                configure[i] = '0';
+                pcausalSet[i] = '0';
         do{
                 rho += postValues[rank[index]]/total_post;
-                configure[rank[index]] = '1';
+                pcausalSet[rank[index]] = '1';
                 printf("%d %e\n", rank[index], rho);
                 index++;
         } while( rho < inputRho);

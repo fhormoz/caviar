@@ -204,7 +204,7 @@ void exportVector2File(string fileName, char * data, int size) {
 	ofstream outfile(fileName.c_str(), ios::out | ios::app);
 	for (int i = 0; i < size; i++)
 		outfile << data[i] << " ";
-	outfile << endl;
+	//outfile << endl;
 	outfile.close();
 }
 
@@ -212,7 +212,7 @@ void exportVector2File(string fileName, double * data, int size) {
         ofstream outfile(fileName.c_str(), ios::out | ios::app);
         for (int i = 0; i < size; i++)
                 outfile << data[i] << " ";
-        outfile << endl;
+        //outfile << endl;
         outfile.close();
 }
 
@@ -220,7 +220,13 @@ void exportVector2File(string fileName, int * data, int size) {
         ofstream outfile(fileName.c_str(), ios::out | ios::app);
         for (int i = 0; i < size; i++)
                 outfile << data[i] << " ";
-        outfile << endl;
+        //outfile << endl;
+        outfile.close();
+}
+
+void export2File(string fileName, double data) {
+        ofstream outfile(fileName.c_str(), ios::out | ios::app);
+        outfile << data << endl;
         outfile.close();
 }
 

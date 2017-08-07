@@ -29,7 +29,7 @@ public:
 	int totalCausalSNP;
 	double * sigma;
         double * stat;
-        char * configure;
+        char * pcausalSet;
         int * rank;
         bool histFlag;
 	PostCal * post;
@@ -50,30 +50,27 @@ public:
 		this->outputFileName = outputFileName;
 		this->totalCausalSNP = totalCausalSNP;
 		fileSize(ldFile, tmpSize);
-	        snpCount = (int)sqrt(tmpSize);
-         	sigma     = new double[snpCount * snpCount];
-		stat      = new double[snpCount];
-		configure = new char[snpCount];
-		rank      = new int[snpCount];
-		snpNames  = new string [snpCount];
+	        snpCount   = (int)sqrt(tmpSize);
+         	sigma      = new double[snpCount * snpCount];
+		stat       = new double[snpCount];
+		pcausalSet = new char[snpCount];
+		rank       = new int[snpCount];
+		snpNames   = new string [snpCount];
 		importData(ldFile, sigma);
 		makeSigmaPositiveSemiDefinite(sigma, snpCount);
-		for(int i = 0; i < snpCount*snpCount; i++)
-			cout << sigma[i] << " ";
-		cout << endl;
 		importDataFirstColumn(zFile, snpNames);
 		importDataSecondColumn(zFile, stat);
 		post = new PostCal(sigma, stat, snpCount, totalCausalSNP, snpNames, gamma);
 	}
 	void run() {
-        	post->findOptimalSetGreedy(stat, NCP, configure, rank, rho);
+        	post->findOptimalSetGreedy(stat, NCP, pcausalSet, rank, rho, outputFileName);
 	}
 	void finishUp() {
 		ofstream outputFile;
                 string outFileNameSet = string(outputFileName)+"_set";
                 outputFile.open(outFileNameSet.c_str());
                 for(int i = 0; i < snpCount; i++) {
-                        if(configure[i] == '1')
+                        if(pcausalSet[i] == '1')
                                 outputFile << snpNames[i] << endl;
                 }
                 post->printPost2File(string(outputFileName)+"_post");
@@ -81,7 +78,14 @@ public:
                 if(histFlag)
                 	post->printHist2File(string(outputFileName)+"_hist");
 	}
-        ~CaviarModel() {
+
+	void printLogData() {
+		//print likelihood
+		//print all possible configuration from the p-causal set
+		post->computeALLCausalSetConfiguration(stat, NCP, pcausalSet,outputFileName+".log");
+	}
+
+	~CaviarModel() {
 	}
 
 };
