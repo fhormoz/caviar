@@ -34,7 +34,7 @@ double PostCal::fracdmvnorm(mat Z, mat mean, mat R, mat diagC, double NCP) {
         mat res1 = trans(ZcenterMean) * inv(R) * (ZcenterMean);
         mat res2 = trans(ZcenterMean) * inv(newR) *  (ZcenterMean);
 
-        double v1 = res1(0,0)/2-res2(0,0)/2;
+        double v1 = res1(0,0)/2-res2(0,0)/2-baseValue/2;
         return(exp(v1)/sqrt(det(newR))* sqrt(det(R)));
 }
 
@@ -60,6 +60,16 @@ double PostCal::fastLikelihood(int * configure, double * stat, double NCP) {
 		if(configure[i] == 1)
 			causalIndex.push_back(i);
 	}
+	
+	if (causalCount == 0) {
+		int maxVal = 0;
+		for(int i = 0; i < snpCount; i++) {
+			if (maxVal < abs(stat[i]))
+				maxVal = stat[i];
+		}
+		baseValue = maxVal * maxVal;
+	}
+
 	mat Rcc(causalCount, causalCount, fill::zeros);
 	mat Zcc(causalCount, 1, fill::zeros);
 	mat mean(causalCount, 1, fill::zeros);
