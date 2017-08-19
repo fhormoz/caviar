@@ -135,12 +135,15 @@ void importDataSecondColumn(string fileName, double * vector) {
 /*
 	The column index starts by 1 in this implemenation
 */
-void importDataNthColumn(string fileName, double * vector, int colNum) {
+void importDataNthColumn(string fileName, double * vector, int colNum, int ignore=0) {
         int index = 0;
         string line = "";
         string dataS = "";
         double data = 0.0;
 	ifstream fin(fileName.c_str(), std::ifstream::in);
+	for(int i = 0; i < ignore; i++)
+        	getline(fin, line);
+
         while( getline(fin, line) ){
                 istringstream iss(line);
                 iss >> dataS;
@@ -153,11 +156,14 @@ void importDataNthColumn(string fileName, double * vector, int colNum) {
         fin.close();
 }
 
-void importDataFirstColumn(string fileName, string * list) {
+void importDataFirstColumn(string fileName, string * list, int ignore=0) {
  	int index = 0;
         string data = "";
         string line = "";
 	ifstream fin(fileName.c_str(), std::ifstream::in);
+	for(int i = 0; i < ignore; i++)
+                getline(fin, line);
+	
         while( getline(fin, line) ){
 		istringstream iss(line);
                 iss >> data;

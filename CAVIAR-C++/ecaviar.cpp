@@ -134,16 +134,17 @@ int main( int argc, char *argv[]  ){
 	snpNames  = new string [snpCount];
 	stat1     = new double [snpCount];	
 	stat2     = new double [snpCount];	
-	importDataFirstColumn(outputFileName+"_1"+"_post", snpNames);
-	importDataNthColumn(outputFileName+"_1"+"_post", stat1, 3);	
-	importDataNthColumn(outputFileName+"_2"+"_post", stat2, 3);	
-	ofstream outfile( (outputFileName+"_col").c_str(), ios::out | ios::app);	
+	importDataFirstColumn(outputFileName+"_1"+"_post", snpNames, 1);
+	importDataNthColumn(outputFileName+"_1"+"_post", stat1, 3, 1);	
+	importDataNthColumn(outputFileName+"_2"+"_post", stat2, 3, 1);	
+	ofstream outfile( (outputFileName+"_col").c_str(), ios::out);	
 	double sumCLPP = 0;
 	for(int i = 0; i < snpCount; i++) {
 		sumCLPP = sumCLPP + stat1[i] * stat2[i];
 	}
+	outfile << "SNP_ID\tProb_in_pCausalSet\tCLPP" << endl;
 	for(int i = 0; i < snpCount; i++) {
-		outfile << snpNames[i] << "\t" << stat1[i] * stat2[i]  << "\t" << (stat1[i] * stat2[i])/sumCLPP << endl;
+		outfile << snpNames[i] << "\t" << (stat1[i] * stat2[i])/sumCLPP << "\t" << stat1[i] * stat2[i] << endl;
 	}	
 	outfile.close();
 	//system(("rm "+ outputFileName + "_1_post").c_str());
