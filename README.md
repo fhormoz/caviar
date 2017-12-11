@@ -46,7 +46,7 @@ Options:
 -f 1                            to out the probaility of different number of causal SNP
 ``` 
 
-### Output: 
+### Output
 
 OUTFILE_1_set - causal SNP in GWAS 
 
@@ -74,7 +74,7 @@ CAVIAR is written in C++ and must be compiled before running. If you are encount
 CAVIAR should be able to run using these parameters 
 
 Other helpful hints - if running eCAVIAR make sure your LD files have the same SNPs, works best for low to medium LD 
-
+other related code developed by UCSF students [here](https://github.com/christacaggiano/GWAS-EQTL) 
 
 CAVIAR is offered under the GNU Affero GPL (https://www.gnu.org/licenses/why-affero-gpl.html).
 
