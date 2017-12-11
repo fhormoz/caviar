@@ -15,7 +15,7 @@ to install this repository --
 
 git clone https://github.com/fhormoz/caviar.git
 
-CAVIAR usage 
+### CAVIAR usage 
 
 ```bash 
 ./CAVIAR [options] 
@@ -30,7 +30,7 @@ Options:
 ```
 
 
-eCAVIAR usage 
+### eCAVIAR usage 
 ```bash 
 Usage: ./eCAVIAR [options]
 
@@ -46,7 +46,7 @@ Options:
 -f 1                            to out the probaility of different number of causal SNP
 ``` 
 
-### Output 
+### Output: 
 
 OUTFILE_1_set - causal SNP in GWAS 
 
