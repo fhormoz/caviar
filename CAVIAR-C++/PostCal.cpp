@@ -82,6 +82,12 @@ double PostCal::fastLikelihood(int * configure, double * stat, double NCP) {
 		Zcc(i,0) = stat[causalIndex[i]];
 		diagC(i,i) = NCP;
 	}
+	
+	while (det(Rcc) <= 0.01) {	
+		mat toAdd(causalCount, causalCount);
+		toAdd.eye();
+		Rcc = Rcc + 0.1 * toAdd;
+	}
 	return fracdmvnorm(Zcc, mean, Rcc, diagC, NCP);
 }
 
