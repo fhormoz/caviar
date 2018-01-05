@@ -277,7 +277,7 @@ double PostCal::findOptimalSetGreedy(double * stat, double NCP, char * pcausalSe
 	export2File(outputFileName+".log", totalLikeLihood); //Output the total likelihood to the log File
 	for(int i = 0; i < snpCount; i++)
 		total_post += postValues[i];
-	printf("Total Likelihood= %e SNP=%d \n", total_post, snpCount);
+	printf("Total Post= %e SNP=%d \n", total_post, snpCount);
 	
         std::vector<data> items;
         std::set<int>::iterator it;
