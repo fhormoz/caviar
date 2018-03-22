@@ -26,7 +26,7 @@ private:
 	double * histValues;	//the probability of the number of causal SNPs, we make the histogram of the causal SNPs
 	int snpCount;		//total number of variants (SNP) in a locus
 	int maxCausalSNP;	//maximum number of causal variants to consider in a locus
-	double totalLikeLihood; //Compute the total likelihood of all causal status (by likelihood we use prior)
+	double totalLikeLihoodLOG; //Compute the total likelihood of all causal status (by likelihood we use prior)
 
 	vector <double *>  sigma;       //the list of all LD matrix
 	vector <double *>  stat;	// the list of all stat
@@ -101,7 +101,7 @@ public:
                 	total_post += postValues[i];
 		outfile << "SNP_ID\tProb_in_pCausalSet\tCausal_Post._Prob." << endl; 
 		for(int i = 0; i < snpCount; i++) {
-			outfile << snpNames[i] << "\t" << postValues[i]/total_post << "\t" << postValues[i]/totalLikeLihood << endl;
+			outfile << snpNames[i] << "\t" << postValues[i]/total_post << "\t" << postValues[i]/totalLikeLihoodLOG << endl;
 		}
 	}
 

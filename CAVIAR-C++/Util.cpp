@@ -41,17 +41,17 @@ long int nCr(int n, int r) {
 
 void printVector(char * data, int size) {
         for(int i = 0; i < size; i++)
-                printf("%c, ", data[i]);
+                printf("%c_", data[i]);
 }
 
 void printVector(int * data, int size) {
         for(int i = 0; i < size; i++)
-                printf("%d, ", (int)data[i]);
+                printf("%d_", (int)data[i]);
 }
 
 void printVector(double * data, int size) {
         for(int i = 0; i < size; i++)
-                printf("%lf, ", data[i]);
+                printf("%lf_", data[i]);
 }
 
 void diffVector(double * data1, double * data2, int size, double * result) {
@@ -90,13 +90,20 @@ void multVectorMatrix(double *vector, double * matrix, int size, double * result
 void importData(string fileName, double * vector) {
 	int index = 0;
 	double data = 0;
+ 	string dataS = "";
+	std::stringstream dataSS;
         ifstream fin(fileName.c_str(), std::ifstream::in);
-        fin >> data;
-        while (fin.good()) {
+        fin >> dataS;
+	stringstream(dataS) >> data;
+        while ( fin.good()) {
                 vector[index] = data;
                 index++;
-                fin >> data;
-        }
+                fin >> dataS;
+  		if (dataS.find("nan") == string::npos)
+			stringstream(dataS) >> data;	
+		else
+			data = 0;
+	}
         fin.close();
 }
 
@@ -125,10 +132,9 @@ void importDataSecondColumn(string fileName, double * vector) {
 		istringstream iss(line);
 		iss >> dataS;
 		iss >> data;
-	        vector[index] = (double)data;
+		vector[index] = (double)data;
                 index++;
         }
-	cout << "reach=" << index << endl;
         fin.close();
 }
 
@@ -152,7 +158,6 @@ void importDataNthColumn(string fileName, double * vector, int colNum, int ignor
                 vector[index] = (double)data;
                 index++;
         }
-        cout << "reach=" << index << endl;
         fin.close();
 }
 
@@ -170,17 +175,16 @@ void importDataFirstColumn(string fileName, string * list, int ignore=0) {
                 list[index] = data;
 		index++;
         }
-	cout << "FINISH" << endl;
         fin.close();
 }
 
 void fileSize(string fileName, int & size) {
 	size = 0;
-	double data = 0;	
+	string dataS = "";
 	ifstream fin(fileName.c_str(), std::ifstream::in);
 	while( fin.good()  ){
-		fin >> data;
-		size++;
+		fin >> dataS;
+		size++;	
 	}
 	fin.close();
 }
@@ -286,12 +290,10 @@ void makeSigmaPositiveSemiDefinite(double * sigma, int size) {
 	
 		gsl_linalg_LU_decomp(tmpResultMatrix, p, &gsl_tmp);
        		matDet = gsl_linalg_LU_det(tmpResultMatrix,gsl_tmp);	
-		cout << matDet << "\t" << addDiag << endl;
 		if(matDet > 0 ) 
 			positive = true;
 		else {
-			cout << "add" << endl;
-			addDiag+=0.1;		
+			addDiag+=0.01;		
 		}
 	} while(!positive);
 	for(int i = 0; i < size*size; i++){

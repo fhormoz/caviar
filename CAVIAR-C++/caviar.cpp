@@ -15,7 +15,7 @@ using namespace std;
 
 int main( int argc, char *argv[]  ){
 	int totalCausalSNP = 2;
-	double NCP = 5.7;
+	double NCP = 5.2;
 	double gamma = 0.01;
 	double rho = 0.95;
 	bool histFlag = false;
@@ -71,12 +71,12 @@ int main( int argc, char *argv[]  ){
 	
 	//program is running
 	cout << "@-------------------------------------------------------------@" << endl;
-	cout << "| CAVIAR!		| 	   v2.0         |  01/Aug/2017 | " << endl;
+	cout << "| CAVIAR!		| 	   v2.1         |  21/Mar/2018| " << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
-	cout << "| (C) 2017 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
+	cout << "| (C) 2018 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
 	cout << "| For documentation, citation & bug-report instructions:      |" << endl;
-	cout << "| 		http://genetics.cs.ucla.edu/caviar/            |" << endl;
+	cout << "| 		http://genetics.cs.ucla.edu/caviar/           |" << endl;
 	cout << "@-------------------------------------------------------------@" << endl;	
 
 	CaviarModel caviar(ldFile, zFile, outputFileName, totalCausalSNP, NCP, rho, histFlag, gamma);

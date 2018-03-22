@@ -183,9 +183,9 @@ double PostCalMultiPop::findOptimalSetGreedy(double NCP, char * pcausalSet, int 
         double rho = 0;
         double total_post = 0;
 
-        totalLikeLihood = computeTotalLikelihood(NCP);
+        totalLikeLihoodLOG = computeTotalLikelihood(NCP);
 	
-	export2File(outputFileName+".log", totalLikeLihood); //Output the total likelihood to the log File
+	export2File(outputFileName+".log", totalLikeLihoodLOG); //Output the total likelihood to the log File
 	for(int i = 0; i < snpCount; i++)
 		total_post += postValues[i];
 	printf("Total Likelihood= %e SNP=%d \n", total_post, snpCount);

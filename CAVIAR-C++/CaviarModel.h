@@ -57,9 +57,12 @@ public:
 		rank       = new int[snpCount];
 		snpNames   = new string [snpCount];
 		importData(ldFile, sigma);
-		makeSigmaPositiveSemiDefinite(sigma, snpCount);
 		importDataFirstColumn(zFile, snpNames);
 		importDataSecondColumn(zFile, stat);
+		makeSigmaPositiveSemiDefinite(sigma, snpCount);
+		for (int i = 0; i < snpCount; i++){
+			if (abs(stat[i]) > NCP) NCP = abs(stat[i]);
+		}
 		post = new PostCal(sigma, stat, snpCount, totalCausalSNP, snpNames, gamma);
 	}
 	void run() {

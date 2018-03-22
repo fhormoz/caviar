@@ -111,12 +111,12 @@ int main( int argc, char *argv[]  ){
 
 	//program is running
 	cout << "@-------------------------------------------------------------@" << endl;
-	cout << "| eCAVIAR!     	| 	   v2.0         |  01/Aug/2017 | " << endl;
+	cout << "| eCAVIAR!     	| 	   v2.1         |  21/Mar/2018        | " << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
-	cout << "| (C) 2017 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
+	cout << "| (C) 2018 Farhad Hormozdiari, GNU General Public License, v2 |" << endl;
 	cout << "|-------------------------------------------------------------|" << endl;
 	cout << "| For documentation, citation & bug-report instructions:      |" << endl;
-	cout << "| 		http://genetics.cs.ucla.edu/caviar/            |" << endl;
+	cout << "| 		http://genetics.cs.ucla.edu/caviar/           |" << endl;
 	cout << "@-------------------------------------------------------------@" << endl;	
 
 	//Check the input is right?
