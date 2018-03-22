@@ -20,6 +20,7 @@ void printGSLPrint(mat A, int row, int col);
 class PostCal{
 
 private:
+	
 	double gamma;		// the probability of SNP being causal
 	double * postValues;	//the posterior value for each SNP being causal
 	double * sigma;		//the LD matrix
@@ -28,18 +29,24 @@ private:
 	int maxCausalSNP;	//maximum number of causal variants to consider in a locus
 	double sigmaDet;	//determinie of matrix
 
-	double totalLikeLihood; //Compute the total likelihood of all causal status (by likelihood we use prior)
+	double totalLikeLihoodLOG; //Compute the total log likelihood of all causal status (by likelihood we use prior)
 
 	mat sigmaMatrix;
 	mat invSigmaMatrix;
 	mat statMatrix;
         mat statMatrixtTran;
-	double baseValue;			//base value used for calculation for overflow	
 	string * snpNames;
+
+	double addlogSpace(double a, double b) {
+		double base = max(a,b);
+		if (base - min(a,b) > 700)
+			return base;
+		return(base + log(1+exp(min(a,b)-base)));
+	}
+
 public:
 
 	PostCal(double * sigma, double * stat, int snpCount, int maxCausalSNP, string * snpNames, double gamma) {
-		baseValue = 0;
 		this->gamma = gamma;
 		this->snpNames = snpNames;
 		this-> snpCount = snpCount;
@@ -67,7 +74,9 @@ public:
                 	for (int j = 0; j < snpCount; j++)
                        		sigmaMatrix(i,j) = sigma[i*snpCount+j];
        		}
-		invSigmaMatrix = inv(sigmaMatrix);
+		//invSigmaMatrix is depricated and the value for it is not right
+		//PLASE DO NOT USE THE invSigmaMatrix;
+		invSigmaMatrix = sigmaMatrix;
 		sigmaDet       = det(sigmaMatrix);
 	
 	}
@@ -83,6 +92,8 @@ public:
 
 	double dmvnorm(mat Z, mat mean, mat R);
         double fracdmvnorm(mat Z, mat mean, mat R, mat diagC, double NCP);
+	double fracdmvnorm2(mat Z, mat mean, mat R, mat diagC, double NCP);
+
 
         double fastLikelihood(int * configure, double * stat, double NCP);
 	double likelihood(int * configure, double * stat, double NCP) ;
@@ -98,10 +109,10 @@ public:
 		double total_post = 0;
 		ofstream outfile(fileName.c_str(), ios::out );	
 		for(int i = 0; i < snpCount; i++)
-                	total_post += postValues[i];
+                	total_post = addlogSpace(total_post, postValues[i]);
 		outfile << "SNP_ID\tProb_in_pCausalSet\tCausal_Post._Prob." << endl; 
 		for(int i = 0; i < snpCount; i++) {
-			outfile << snpNames[i] << "\t" << postValues[i]/total_post << "\t" << postValues[i]/totalLikeLihood << endl;
+			outfile << snpNames[i] << "\t" << exp(postValues[i]-total_post) << "\t" << exp(postValues[i]-totalLikeLihoodLOG) << endl;
 		}
 	}
 
