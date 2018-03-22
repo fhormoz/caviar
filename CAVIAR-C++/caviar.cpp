@@ -28,7 +28,7 @@ int main( int argc, char *argv[]  ){
 	while ((oc = getopt(argc, argv, "vhl:o:z:g:r:c:f:")) != -1) {
 		switch (oc) {
 			case 'v':
-				cout << "version 2.0:" << endl;
+				cout << "version 2.1:" << endl;
 			case 'h':
 				cout << "Options: " << endl;
   				cout << "-h, --help            		show this help message and exit " << endl;
