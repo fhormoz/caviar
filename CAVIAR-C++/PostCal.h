@@ -38,6 +38,10 @@ private:
 	string * snpNames;
 
 	double addlogSpace(double a, double b) {
+		if (a == 0)
+			return b;
+		if (b == 0)
+			return a;
 		double base = max(a,b);
 		if (base - min(a,b) > 700)
 			return base;
