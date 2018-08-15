@@ -32,8 +32,10 @@ string PostCal::convertConfig2String(int * config, int size) {
 double PostCal::fracdmvnorm(mat Z, mat mean, mat R, mat diagC, double NCP) {
         mat newR = R + R * diagC  * R;
         mat ZcenterMean = Z - mean;
-        mat res1 = trans(ZcenterMean) * inv(R) * (ZcenterMean);
-        mat res2 = trans(ZcenterMean) * inv(newR) *  (ZcenterMean);
+        //mat res1 = trans(ZcenterMean) * inv(R) * (ZcenterMean);
+        //mat res2 = trans(ZcenterMean) * inv(newR) *  (ZcenterMean);
+	mat res1 = trans(ZcenterMean) * solve(R, eye(size(R))) * (ZcenterMean);
+	mat res2 = trans(ZcenterMean) * solve(newR, eye(size(newR))) *  (ZcenterMean);
         double v1 = res1(0,0)/2-res2(0,0)/2;
 	//CHANGE: MOVE FORM NORMAL CALCULATION TO LOG SPACE
         //return(exp(v1)/sqrt(det(newR))* sqrt(det(R)));
