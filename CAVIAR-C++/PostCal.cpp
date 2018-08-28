@@ -296,9 +296,8 @@ void PostCal::computeALLCausalSetConfiguration(double * stat, double NCP, char *
                 configure[i] = 0;
         for(long int i = 0; i < total_iteration; i++) {
 		if (validConfigutation(configure, pcausalSet)) {
-                	tmp_likelihood = fastLikelihood(configure, stat, NCP) * (pow(gamma, num))*(pow(1-gamma, snpCount-num));
-			//printVector(configure, snpCount);
-			//cout << " " << tmp_likelihood << endl;
+			//log space
+                	tmp_likelihood = fastLikelihood(configure, stat, NCP) +  num * log(gamma) + (snpCount-num) * log(1-gamma);
 			exportVector2File(outputFileName, configure, snpCount);
 			export2File(outputFileName, tmp_likelihood);
 		}
