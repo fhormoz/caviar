@@ -48,19 +48,15 @@ Options:
 
 ### Output
 
-OUTFILE_1_set - causal SNP in GWAS 
-
-OUTFILE_1.log - colocalization p-value for GWAS
+OUTFILE_1_set - causal SNP in GWAS
 
 OUTFILE_2_set - causal SNP in eQTL 
 
-OUTFILE_2.log - colocalization p-value for eQTL 
+OUTFILE_1_post - Causal posterior probability for each SNP in GWAS
 
-OUTFILE_1_post - p-values for each SNP and CLPP values in GWAS
+OUTFILE_2_post - Causal posterior probability for each SNP in eQTL
 
-OUTFILE_2_post - p-values and CLPP for SNPS in eQTL 
-
-OUTFILE_col - p-values/CLPP for each SNP to be colocalized 
+OUTFILE_col - The Colocalization posterior probability (CLPP) for each SNP. 
 
 
 ### Debugging 
