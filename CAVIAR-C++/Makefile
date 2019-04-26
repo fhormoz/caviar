@@ -1,7 +1,7 @@
 CC=g++
 DIC=$(PWD)
 CFLAGS=-c -Wall -g  -I $(DIC) 
-LDFLAGS= -I $(DIC)/armadillo/include/ -DARMA_DONT_USE_WRAPPER -llapack -lblas -lgslcblas  -lgsl
+LDFLAGS= -I $(DIC)/armadillo/include/ -DARMA_DONT_USE_WRAPPER -llapack -lblas -lgslcblas  -lgsl -lgfortran
 SOURCES1=caviar.cpp PostCal.cpp Util.cpp TopKSNP.cpp 
 SOURCES2=ecaviar.cpp PostCal.cpp Util.cpp
 SOURCES3=setcaviar.cpp PostCal.cpp Util.cpp
